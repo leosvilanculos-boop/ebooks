@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{SITE_NAME}} — Premium Digital Ebooks</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary: #00aff0;
+      --primary-hover: #0095d4;
+      --bg: #0a0a0c;
+      --surface: #141418;
+      --surface2: #1c1c22;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-hover: rgba(255, 255, 255, 0.14);
+      --text: #f4f4f5;
+      --muted: #9ca3af;
+      --accent: #00aff0;
+      --accent2: #00aff0;
+      --paypal: #00aff0;
+      --gold: #fbbf24;
+      --danger: #f87171;
+      --success: #34d399;
+      --primary-soft: rgba(0, 175, 240, 0.12);
+      --primary-border: rgba(0, 175, 240, 0.28);
+      --success-bg: rgba(52, 211, 153, 0.1);
+      --success-border: rgba(52, 211, 153, 0.35);
+      --success-text: #6ee7b7;
+      --err-bg: rgba(248, 113, 113, 0.1);
+      --err-border: rgba(248, 113, 113, 0.35);
+      --err-text: #fca5a5;
+    }
+
+    html { color-scheme: dark; }
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      background-image: radial-gradient(ellipse 70% 45% at 50% -15%, rgba(0, 175, 240, 0.07), transparent);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── NAV ─── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10, 10, 12, 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.85rem 2rem;
+    }
+    .nav-logo {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+    .nav-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.78rem;
+      color: var(--muted);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 0.3rem 0.7rem;
+      border-radius: 8px;
+    }
+    .nav-badge span { color: var(--primary); font-weight: 600; }
+
+    /* ─── HERO ─── */
+    .hero {
+      text-align: center;
+      padding: 4rem 1.5rem 2.5rem;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .hero-tag {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--primary);
+      background: var(--primary-soft);
+      border: 1px solid var(--primary-border);
+      padding: 0.3rem 0.75rem;
+      border-radius: 6px;
+      margin-bottom: 1.15rem;
+    }
+    .hero h1 {
+      font-size: clamp(1.85rem, 4.5vw, 2.6rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin-bottom: 0.9rem;
+    }
+    .hero h1 em { font-style: normal; color: var(--primary); }
+    .hero p {
+      font-size: 1rem;
+      color: var(--muted);
+      max-width: 520px;
+      margin: 0 auto 1.5rem;
+    }
+    .trust-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+    .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .trust-item svg { width: 15px; height: 15px; fill: var(--success); }
+    .checkout-note {
+      margin-top: 1rem;
+      font-size: 0.78rem;
+      color: var(--muted);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.4rem 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    /* ─── PROMO BANNER ─── */
+    .promo-banner {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem 1.35rem;
+      margin-bottom: 1.75rem;
+      background: linear-gradient(135deg, rgba(0, 175, 240, 0.08) 0%, var(--surface) 55%);
+    }
+    .promo-banner::before { display: none; }
+    .promo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--primary);
+      margin-bottom: 0.45rem;
+    }
+    .promo-title {
+      font-size: clamp(1.1rem, 3vw, 1.35rem);
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+      letter-spacing: -0.02em;
+    }
+    .promo-sub {
+      font-size: 0.88rem;
+      color: var(--muted);
+      margin-bottom: 0.55rem;
+    }
+    .promo-hint {
+      font-size: 0.76rem;
+      line-height: 1.5;
+      color: var(--muted);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.6rem 0.75rem;
+      margin-bottom: 0.85rem;
+    }
+    .promo-foot {
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-top: 0.75rem;
+      line-height: 1.5;
+    }
+    .promo-foot strong { color: var(--text); font-weight: 700; }
+    .promo-actions { display: flex; gap: 0.55rem; flex-wrap: wrap; align-items: center; }
+    .promo-btn {
+      border-radius: 8px;
+      padding: 0.65rem 1.15rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+      border: 1px solid var(--border);
+      color: var(--text);
+      background: var(--bg);
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      font-family: inherit;
+    }
+    .promo-btn:hover { background: var(--surface2); }
+    .promo-btn.primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+      box-shadow: none;
+    }
+    .promo-btn.primary:hover {
+      background: var(--primary-hover);
+      border-color: var(--primary-hover);
+      transform: none;
+    }
+    .promo-price-tag {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 0.45rem;
+      margin-right: 0.25rem;
+    }
+    .promo-price-tag .was {
+      font-size: 0.82rem;
+      color: var(--muted);
+      text-decoration: line-through;
+    }
+    .promo-price-tag .now {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    /* ─── SUCCESS BANNER ─── */
+    #status-banner {
+      max-width: 1200px;
+      margin: 1.5rem auto 0;
+      padding: 0 1.5rem;
+      display: none;
+    }
+    .banner-inner {
+      padding: 1rem 1.25rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+    .banner-inner.success {
+      background: var(--success-bg);
+      border: 1px solid var(--success-border);
+      color: var(--success-text);
+    }
+    .banner-inner.error {
+      background: var(--err-bg);
+      border: 1px solid var(--err-border);
+      color: var(--err-text);
+    }
+
+    /* ─── GRID ─── */
+    .catalog {
+      max-width: 1200px;
+      margin: 2.5rem auto;
+      padding: 0 1.5rem;
+    }
+    .catalog-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+    .catalog-header h2 { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; }
+    .catalog-header span { font-size: 0.85rem; color: var(--muted); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      display: flex;
+      flex-direction: column;
+    }
+    .card:hover {
+      transform: none;
+      border-color: var(--border-hover);
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+    }
+
+    .card-cover {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 2/3;
+      overflow: hidden;
+      background: var(--surface);
+    }
+    .card-cover img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.3s ease;
+    }
+    .card:hover .card-cover img { transform: scale(1.03); }
+    .card-cover-badge {
+      position: absolute;
+      top: 0.6rem;
+      left: 0.6rem;
+      background: var(--primary);
+      color: #fff;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+    }
+    .card-cover-badge.new { background: var(--primary); color: #fff; }
+
+    .card-body {
+      padding: 1rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .card-category {
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--primary);
+      margin-bottom: 0.35rem;
+    }
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+      margin-bottom: 0.4rem;
+    }
+    .card-author {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+    .stars {
+      display: flex;
+      align-items: center;
+      gap: 0.2rem;
+      font-size: 0.72rem;
+      margin-bottom: 0.6rem;
+    }
+    .stars .s { color: var(--gold); }
+    .stars .count { color: var(--muted); margin-left: 0.25rem; }
+    .card-desc {
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-bottom: 0.9rem;
+      flex: 1;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.8rem;
+    }
+    .price { font-size: 1.15rem; font-weight: 700; color: var(--primary); }
+    .price-old { font-size: 0.8rem; color: var(--muted); text-decoration: line-through; margin-left: 0.3rem; font-weight: 400; }
+    .format-badge {
+      font-size: 0.65rem;
+      font-weight: 600;
+      background: var(--primary-soft);
+      border: 1px solid var(--primary-border);
+      color: var(--primary);
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+    }
+
+    .btn-pay {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.65rem 1rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.88rem;
+      font-weight: 700;
+      background: var(--primary);
+      color: #fff;
+      transition: background 0.15s;
+      box-shadow: none;
+    }
+    .btn-pay:hover {
+      transform: none;
+      background: var(--primary-hover);
+      box-shadow: none;
+      opacity: 1;
+    }
+    .btn-pay:active { transform: none; }
+    .btn-pay .pp-logo { font-weight: 800; }
+    .btn-pay .pp-logo span { color: #ffd166; }
+    .checkout-sub {
+      margin-top: 0.5rem;
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    /* ─── TRUST SECTION ─── */
+    .trust-section {
+      max-width: 1200px;
+      margin: 1rem auto 3rem;
+      padding: 0 1.5rem;
+    }
+    .trust-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+    .trust-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.15rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+    .trust-icon { font-size: 1.5rem; flex-shrink: 0; }
+    .trust-text h4 { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.2rem; }
+    .trust-text p { font-size: 0.78rem; color: var(--muted); line-height: 1.4; }
+
+    /* ─── SUCCESS PAGE ─── */
+    #success-page {
+      display: none;
+      min-height: 100vh;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      background: var(--bg);
+    }
+    #success-page.active { display: flex; }
+    .success-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2.5rem 2rem;
+      text-align: center;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+    }
+    .success-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .success-card h2 { font-size: 1.45rem; font-weight: 700; margin-bottom: 0.65rem; }
+    .success-card p { color: var(--muted); margin-bottom: 1.35rem; line-height: 1.6; }
+    .success-spinner {
+      width: 40px; height: 40px; margin: 0 auto 1.15rem;
+      border: 3px solid var(--primary-border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: success-spin 0.85s linear infinite;
+    }
+    @keyframes success-spin { to { transform: rotate(360deg); } }
+    .btn-access {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      width: 100%;
+      padding: 0.85rem 1.5rem;
+      border-radius: 8px;
+      background: var(--primary);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: background 0.15s;
+      box-shadow: none;
+    }
+    .btn-access:hover { background: var(--primary-hover); transform: none; box-shadow: none; }
+    .success-note { font-size: 0.78rem; color: var(--muted); margin-top: 1.15rem; }
+
+    /* ─── FOOTER ─── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem 1.5rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.8rem;
+      line-height: 1.8;
+    }
+    footer .legal-links { margin-top: 0.75rem; font-size: 0.78rem; }
+    footer .legal-links a { color: var(--primary); text-decoration: none; }
+    footer .legal-links a:hover { text-decoration: underline; }
+
+    @media (max-width: 600px) {
+      nav { padding: 0.75rem 1rem; }
+      .hero { padding: 3rem 1rem 1.75rem; }
+      .grid { grid-template-columns: repeat(2, 1fr); gap: 0.85rem; }
+      .card-body { padding: 0.75rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-logo">{{SITE_NAME}}</div>
+    <div class="nav-badge">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2a5 5 0 1 0 0 10A5 5 0 0 0 12 2zm0 12c-5.33 0-8 2.67-8 4v2h16v-2c0-1.33-2.67-4-8-4z"/></svg>
+      <span>2,400+</span> happy readers
+    </div>
+  </nav>
+
+  <!-- SUCCESS PAGE (shown after payment) -->
+  <div id="success-page">
+    <div class="success-card">
+      <div class="success-icon">🎉</div>
+      <h2>Payment confirmed!</h2>
+      <p>Thank you for your purchase. We're unlocking your private library now — your content will open automatically in just a moment.</p>
+      <div class="success-spinner" aria-hidden="true"></div>
+      <a id="telegram-btn" href="#" class="btn-access" target="_blank" rel="noopener noreferrer">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+        Open my content
+      </a>
+      <p class="success-note">Preparing your instant access — please keep this tab open.</p>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div id="main-content">
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-tag">✦ Instant Digital Download</div>
+      <h1>Premium Ebooks for <em>Real Results</em></h1>
+      <p>Curated digital books on business, money, mindset and productivity. Secure checkout and instant access after payment confirmation.</p>
+      <div class="trust-row">
+        <div class="trust-item">
+          <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+          SSL Secured
+        </div>
+        <div class="trust-item">
+          <svg viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          Instant Download
+        </div>
+        <div class="trust-item">
+          <svg viewBox="0 0 24 24"><path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+          Secure Checkout
+        </div>
+        <div class="trust-item">
+          <svg viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+          24/7 Support
+        </div>
+      </div>
+      <p class="checkout-note">🔐 Secure checkout processed by Walled</p>
+    </section>
+
+    <!-- STATUS BANNER -->
+    <div id="status-banner">
+      <div class="banner-inner" id="banner-inner"></div>
+    </div>
+
+    <!-- CATALOG -->
+    <section class="catalog">
+      <div class="promo-banner" id="promo-all-content">
+        <div class="promo-badge">✦ VIP Offer</div>
+        <div class="promo-title">All Content Promo — $200</div>
+        <div class="promo-sub">Complete digital library · All ebooks included · Instant download after payment</div>
+        <p class="promo-hint">
+          Secure checkout through Walled. Full library access unlocks when payment is confirmed.
+        </p>
+        <div class="promo-actions">
+          <span class="promo-price-tag" aria-hidden="true">
+            <span class="was">$890</span>
+            <span class="now">$200</span>
+          </span>
+          <button type="button" class="promo-btn primary" id="promo-pay" data-method="walled">Pay Instantly — $200</button>
+        </div>
+        <p class="promo-foot"><strong>2,400+ readers</strong> · Discreet billing · 30-day satisfaction guarantee</p>
+      </div>
+
+      <div class="catalog-header">
+        <h2>Best Sellers</h2>
+        <span>16 titles • Updated 2026</span>
+      </div>
+      <div class="grid">
+
+        <div class="card" data-name="30-Day Weight Loss Recipes" data-price="45">
+          <div class="card-cover">
+            <img src="https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=400&h=600&fit=crop&auto=format" alt="Weight Loss Recipes" loading="lazy">
+            <span class="card-cover-badge new">New</span>
+          </div>
+          <div class="card-body">
+            <div class="card-category">Weight Loss</div>
+            <div class="card-title">30-Day Weight Loss Recipes</div>
+            <div class="card-author">by Emma Carter</div>
+            <div class="stars">
+              <span class="s">★★★★★</span>
+              <span class="count">(1,126)</span>
+            </div>
+            <div class="card-desc">A complete 30-day fat-loss meal plan with high-protein, low-calorie recipes for fast and sustainable results.</div>
+            <div class="card-footer">
+              <div><span class="price">$45</span><span class="price-old">$79</span></div>
+              <span class="format-badge">PDF + EPUB</span>
+            </div>
+            <button class="btn-pay paypal-button" data-method="walled">
+              <span>Pay Instantly</span>
+            </button>
+            <div class="checkout-sub">Encrypted checkout · instant access after payment</div>
+          </div>
+        </div>
+
+        <div class="card" data-name="Keto Fat Burn Cookbook" data-price="40">
+          <div class="card-cover">
+            <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=600&fit=crop&auto=format" alt="Keto Cookbook" loading="lazy">
+            <span class="card-cover-badge">Top Rated</span>
+          </div>
+          <div class="card-body">
+            <div class="card-category">Nutrition</div>
+            <div class="card-title">Keto Fat Burn Cookbook</div>
+            <div class="card-author">by Daniel Rhodes</div>
+            <div class="stars">
+              <span class="s">★★★★★</span>
+              <span class="count">(842)</span>
+            </div>
+            <div class="card-desc">120 keto-friendly recipes with shopping lists, macros and weekly meal prep for faster fat loss.</div>
+            <div class="card-footer">
+              <div><span class="price">$40</span><span class="price-old">$84</span></div>
+              <span class="format-badge">PDF + EPUB</span>
+            </div>
+            <button class="btn-pay paypal-button" data-method="walled">
+              <span>Pay Instantly</span>
+            </button>
+            <div class="checkout-sub">Encrypted checkout · instant access after payment</div>
+          </div>
+        </div>
+
+        <div class="card" data-name="Male Enhancement Blueprint" data-price="55">
+          <div class="card-cover">
+            <img src="https://images.unsplash.com/photo-1518611012118-696072aa579a?w=400&h=600&fit=crop&auto=format" alt="Male Enhancement Guide" loading="lazy">
+            <span class="card-cover-badge">Bestseller</span>
+          </div>
+          <div class="card-body">
+            <div class="card-category">Men's Health</div>
+            <div class="card-title">Male Enhancement Blueprint</div>
+            <div class="card-author">by Michael Grant</div>
+            <div class="stars">
+              <span class="s">★★★★</span>★
+              <span class="count">(1,904)</span>
+            </div>
+            <div class="card-desc">Natural training methods, routines and recovery protocols focused on male confidence and performance.</div>
+            <div class="card-footer">
+              <div><span class="price">$55</span><span class="price-old">$99</span></div>
+              <span class="format-badge">PDF + EPUB</span>
+            </div>
+            <button class="btn-pay paypal-button" data-method="walled">
+              <span>Pay Instantly</span>
+            </button>
+            <div class="checkout-sub">Encrypted checkout · instant access after payment</div>
+          </div>
+        </div>
+
+        <div class="card" data-name="Penis Enlargement Protocol" data-price="35">
+          <div class="card-cover">
+            <img src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=600&fit=crop&auto=format" alt="Penis Enlargement Protocol" loading="lazy">
+            <span class="card-cover-badge new">New</span>
+          </div>
+          <div class="card-body">
+            <div class="card-category">Men's Wellness</div>
+            <div class="card-title">Penis Enlargement Protocol</div>
+            <div class="card-author">by Dr. Kevin Miles</div>
+            <div class="stars">
+              <span class="s">★★★★</span>★
+              <span class="count">(1,117)</span>
+            </div>
+            <div class="card-desc">Step-by-step routines, safety guidelines and progress tracking focused on non-surgical enlargement strategies.</div>
+            <div class="card-footer">
+              <div><span class="price">$35</span><span class="price-old">$109</span></div>
+              <span class="format-badge">PDF + EPUB</span>
+            </div>
+            <button class="btn-pay paypal-button" data-method="walled">
+              <span>Pay Instantly</span>
+            </button>
+            <div class="checkout-sub">Encrypted checkout · instant access after payment</div>
+          </div>
+        </div>
+
+        <div class="card" data-name="Healthy Air Fryer Recipes" data-price="45">
+          <div class="card-cover">
+            <img src="https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400&h=600&fit=crop&auto=format" alt="Air Fryer Recipes" loading="lazy">
+            <span class="card-cover-badge">Top Rated</span>
+          </div>
+          <div class="card-body">
+            <div class="card-category">Cooking</div>
+            <div class="card-title">Healthy Air Fryer Recipes</div>
+            <div class="card-author">by Olivia Bennett</div>
+            <div class="stars">
+              <span class="s">★★★★★</span>
+              <span class="count">(2,012)</span>
+            </div>
+            <div class="card-desc">Quick and healthy air fryer meals for breakfast, lunch and dinner with easy ingredients and fast prep.</div>
+            <div class="card-footer">
+              <div><span class="price">$45</span><span class="price-old">$69</span></div>
+              <span class="format-badge">PDF + EPUB</span>
+            </div>
+            <button class="btn-pay paypal-button" data-method="walled">
+              <span>Pay Instantly</span>
+            </button>
+            <div class="checkout-sub">Encrypted checkout · instant access after payment</div>
+          </div>
+        </div>
+
+        <div class="card" data-name="Family Comfort Food Recipes" data-price="40">
+          <div class="card-cover">
+            <img src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=600&fit=crop&auto=format" alt="Family Comfort Food Recipes" loading="lazy">
+            <span class="card-cover-badge">Bestseller</span>
+          </div>
+          <div class="card-body">
+            <div class="card-category">Cooking</div>
+            <div class="card-title">Family Comfort Food Recipes</div>
+            <div class="card-author">by Rachel Monroe</div>
+            <div class="stars">
+              <span class="s">★★★★★</span>
+              <span class="count">(1,633)</span>
+            </div>
+            <div class="card-desc">Classic homemade recipes with modern twists, perfect for family dinners, gatherings and weekend meals.</div>
+            <div class="card-footer">
+              <div><span class="price">$40</span><span class="price-old">$74</span></div>
+              <span class="format-badge">PDF + EPUB</span>
+            </div>
+            <button class="btn-pay paypal-button" data-method="walled">
+              <span>Pay Instantly</span>
+            </button>
+            <div class="checkout-sub">Encrypted checkout · instant access after payment</div>
+          </div>
+        </div>
+
+        <div class="card" data-name="Personal Development Ebook" data-price="25">
+          <div class="card-cover">
+            <img src="https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&h=600&fit=crop&auto=format" alt="Personal Development" loading="lazy">
+            <span class="card-cover-badge">Bestseller</span>
+          </div>
+          <div class="card-body">
+            <div class="card-category">Self Help</div>
+            <div class="card-title">Personal Development Mastery</div>
+            <div class="card-author">by James K. Foster</div>
+            <div class="stars">
+              <span class="s">★★★★★</span>
+              <span class="count">(1,284)</span>
+            </div>
+            <div class="card-desc">Master your habits and achieve your goals. 50+ actionable strategies proven to work.</div>
+            <div class="card-footer">
+              <div><span class="price">$25</span><span class="price-old">$49</span></div>
+              <span class="format-badge">PDF + EPUB</span>
+            </div>
+            <button class="btn-pay paypal-button" data-method="walled">
+              <span>Pay Instantly</span>
+            </button>
+            <div class="checkout-sub">Encrypted checkout · instant access after payment</div>
+          </div>
+        </div>
+
+        <div class="card" data-name="Financial Freedom Guide" data-price="30">
+          <div class="card-cover">
+            <img src="https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=400&h=600&fit=crop&auto=format" alt="Financial Freedom" loading="lazy">
+            <span class="card-cover-badge">Top Rated</span>
+          </div>
+          <div class="card-body">
+            <div class="card-category">Finance</div>
+            <div class="card-title">Financial Freedom Blueprint</div>
+            <div class="card-author">by Sarah Chen</div>
+            <div class="stars">
+              <span class="s">★★★★★</span>
+              <span class="count">(987)</span>
+            </div>
+            <div class="card-desc">Build wealth step by step. Passive income, budgeting, and investment basics explained simply.</div>
+            <div class="card-footer">
+              <div><span class="price">$30</span><span class="price-old">$59</span></div>
+              <span class="format-badge">PDF + EPUB</span>
+            </div>
+            <button class="btn-pay paypal-button" data-method="walled">
+              <span>Pay Instantly</span>
+            </button>
+            <div class="checkout-sub">Encrypted checkout · instant access after payment</div>
+          </div>
+        </div>
+
+        <div class="card" data-name="Digital Marketing Guide" data-price="35">
+          <div class="card-cover">
+            <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=600&fit=crop&auto=format" alt="Digital Marketing" loading="lazy">
+            <span class="card-cover-badge new">New</span>
+          </div>
+          <div class="card-body">
+            <div class="card-category">Marketing</div>
+            <div class="card-title">Digital Marketing 2025</div>
+            <div class="card-author">by Marcus Reid</div>
+            <div class="stars">
+              <span class="s">★★★★</span>★
+              <span class="count">(654)</span>
+            </div>
+            <div class="card-desc">SEO, social media & email marketing. Everything you need to grow your business online.</div>
+            <div class="card-footer">
+              <div><span class="price">$35</span><span class="price-old">$69</span></div>
+              <span class="format-badge">PDF + EPUB</span>
+            </div>
+            <button class="btn-pay paypal-button" data-method="walled">
+              <span>Pay Instantly</span>
+            </button>
+            <div class="checkout-sub">Encrypted checkout · instant access after payment</div>
+          </div>
+        </div>
+
+        <div class="card" data-name="Health & Wellness Guide" data-price="40">
+          <div class="card-cover">
+            <img src="https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=400&h=600&fit=crop&auto=format" alt="Health & Wellness" loading="lazy">
+            <span class="card-cover-badge">Bestseller</span>
+          </div>
+          <div class="card-body">
+            <div class="card-category">Health</div>
+            <div class="card-title">Complete Wellness Roadmap</div>
+            <div class="card-author">by Dr. Lisa Hoang</div>
+            <div class="stars">
+              <span class="s">★★★★★</span>
+              <span class="count">(2,109)</span>
+            </div>
+            <div class="card-desc">Nutrition, fitness & mindfulness combined. Your all-in-one guide to a healthier life.</div>
+            <div class="card-footer">
+              <div><span class="price">$40</span><span class="price-old">$79</span></div>
+              <span class="format-badge">PDF + EPUB</span>
+            </div>
+            <button class="btn-pay paypal-button" data-method="walled">
+              <span>Pay Instantly</span>
+            </button>
+            <div class="checkout-sub">Encrypted checkout · instant access after payment</div>
+          </div>
+        </div>
+
+        <div class="card" data-name="Productivity Masterclass" data-price="45">
+          <div class="card-cover">
+            <img src="https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=400&h=600&fit=crop&auto=format" alt="Productivity" loading="lazy">
+            <span class="card-cover-badge">Top Rated</span>
+          </div>
+          <div class="card-body">
+            <div class="card-category">Productivity</div>
+            <div class="card-title">Productivity Masterclass</div>
+            <div class="card-author">by Tom Archer</div>
+            <div class="stars">
+              <span class="s">★★★★★</span>
+              <span class="count">(1,477)</span>
+            </div>
+            <div class="card-desc">2x your output. Time management, deep focus & workflow optimization for busy professionals.</div>
+            <div class="card-footer">
+              <div><span class="price">$45</span><span class="price-old">$89</span></div>
+              <span class="format-badge">PDF + EPUB</span>
+            </div>
+            <button class="btn-pay paypal-button" data-method="walled">
+              <span>Pay Instantly</span>
+            </button>
+            <div class="checkout-sub">Encrypted checkout · instant access after payment</div>
+          </div>
+        </div>
+
+        <div class="card" data-name="Mindfulness & Meditation Guide" data-price="55">
+          <div class="card-cover">
+            <img src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&h=600&fit=crop&auto=format" alt="Mindfulness" loading="lazy">
+            <span class="card-cover-badge new">New</span>
+          </div>
+          <div class="card-body">
+            <div class="card-category">Mindfulness</div>
+            <div class="card-title">Mindfulness in 10 Minutes</div>
+            <div class="card-author">by Anna Petrov</div>
+            <div class="stars">
+              <span class="s">★★★★</span>★
+              <span class="count">(834)</span>
+            </div>
+            <div class="card-desc">Reduce stress and sharpen clarity. Simple daily techniques for calm, focused living.</div>
+            <div class="card-footer">
+              <div><span class="price">$55</span><span class="price-old">$99</span></div>
+              <span class="format-badge">PDF + EPUB</span>
+            </div>
+            <button class="btn-pay paypal-button" data-method="walled">
+              <span>Pay Instantly</span>
+            </button>
+            <div class="checkout-sub">Encrypted checkout · instant access after payment</div>
+          </div>
+        </div>
+
+        <div class="card" data-name="Entrepreneurship Blueprint" data-price="60">
+          <div class="card-cover">
+            <img src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&h=600&fit=crop&auto=format" alt="Entrepreneurship" loading="lazy">
+            <span class="card-cover-badge">Bestseller</span>
+          </div>
+          <div class="card-body">
+            <div class="card-category">Business</div>
+            <div class="card-title">Entrepreneurship Blueprint</div>
+            <div class="card-author">by Derek Stone</div>
+            <div class="stars">
+              <span class="s">★★★★★</span>
+              <span class="count">(3,211)</span>
+            </div>
+            <div class="card-desc">Start and scale your business. From idea to your first $10k — step by step.</div>
+            <div class="card-footer">
+              <div><span class="price">$60</span><span class="price-old">$119</span></div>
+              <span class="format-badge">PDF + EPUB</span>
+            </div>
+            <button class="btn-pay paypal-button" data-method="walled">
+              <span>Pay Instantly</span>
+            </button>
+            <div class="checkout-sub">Encrypted checkout · instant access after payment</div>
+          </div>
+        </div>
+
+        <div class="card" data-name="AI & Automation Playbook" data-price="65">
+          <div class="card-cover">
+            <img src="https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=400&h=600&fit=crop&auto=format" alt="AI & Automation" loading="lazy">
+            <span class="card-cover-badge new">New</span>
+          </div>
+          <div class="card-body">
+            <div class="card-category">Technology</div>
+            <div class="card-title">AI & Automation Playbook</div>
+            <div class="card-author">by Chris Nomura</div>
+            <div class="stars">
+              <span class="s">★★★★★</span>
+              <span class="count">(562)</span>
+            </div>
+            <div class="card-desc">Use AI tools to automate work, save 20+ hours a week & boost your income streams.</div>
+            <div class="card-footer">
+              <div><span class="price">$65</span><span class="price-old">$129</span></div>
+              <span class="format-badge">PDF + EPUB</span>
+            </div>
+            <button class="btn-pay paypal-button" data-method="walled">
+              <span>Pay Instantly</span>
+            </button>
+            <div class="checkout-sub">Encrypted checkout · instant access after payment</div>
+          </div>
+        </div>
+
+        <div class="card" data-name="Crypto & Web3 Starter Kit" data-price="60">
+          <div class="card-cover">
+            <img src="https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=400&h=600&fit=crop&auto=format" alt="Crypto" loading="lazy">
+            <span class="card-cover-badge">Top Rated</span>
+          </div>
+          <div class="card-body">
+            <div class="card-category">Crypto</div>
+            <div class="card-title">Crypto & Web3 Starter Kit</div>
+            <div class="card-author">by Nina Walsh</div>
+            <div class="stars">
+              <span class="s">★★★★</span>★
+              <span class="count">(719)</span>
+            </div>
+            <div class="card-desc">Blockchain, DeFi & NFTs explained simply. A beginner's complete guide to Web3.</div>
+            <div class="card-footer">
+              <div><span class="price">$60</span><span class="price-old">$119</span></div>
+              <span class="format-badge">PDF + EPUB</span>
+            </div>
+            <button class="btn-pay paypal-button" data-method="walled">
+              <span>Pay Instantly</span>
+            </button>
+            <div class="checkout-sub">Encrypted checkout · instant access after payment</div>
+          </div>
+        </div>
+
+        <div class="card" data-name="High Ticket Sales Scripts" data-price="65">
+          <div class="card-cover">
+            <img src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=400&h=600&fit=crop&auto=format" alt="Sales Scripts" loading="lazy">
+            <span class="card-cover-badge new">New</span>
+          </div>
+          <div class="card-body">
+            <div class="card-category">Sales</div>
+            <div class="card-title">High Ticket Sales Scripts</div>
+            <div class="card-author">by Ryan Blake</div>
+            <div class="stars">
+              <span class="s">★★★★★</span>
+              <span class="count">(448)</span>
+            </div>
+            <div class="card-desc">Copy-paste scripts to close premium clients via chat or call. Includes 30 templates.</div>
+            <div class="card-footer">
+              <div><span class="price">$65</span><span class="price-old">$129</span></div>
+              <span class="format-badge">PDF + EPUB</span>
+            </div>
+            <button class="btn-pay paypal-button" data-method="walled">
+              <span>Pay Instantly</span>
+            </button>
+            <div class="checkout-sub">Encrypted checkout · instant access after payment</div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- TRUST SECTION -->
+    <section class="trust-section">
+      <div class="trust-grid">
+        <div class="trust-card">
+          <div class="trust-icon">⚡</div>
+          <div class="trust-text">
+            <h4>Instant Delivery</h4>
+            <p>Your download link is sent immediately after payment is confirmed.</p>
+          </div>
+        </div>
+        <div class="trust-card">
+          <div class="trust-icon">🔒</div>
+          <div class="trust-text">
+            <h4>Secure Payment</h4>
+            <p>Payments are processed securely through Walled. Access is unlocked after payment confirmation.</p>
+          </div>
+        </div>
+        <div class="trust-card">
+          <div class="trust-icon">♻️</div>
+          <div class="trust-text">
+            <h4>30-Day Guarantee</h4>
+            <p>Not satisfied? Contact us within 30 days for a full refund, no questions.</p>
+          </div>
+        </div>
+        <div class="trust-card">
+          <div class="trust-icon">💬</div>
+          <div class="trust-text">
+            <h4>Live Support</h4>
+            <p>Our team is available 24/7 to help with access, billing, or any issue.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      © 2025 {{SITE_NAME}} · Digital Products · All Rights Reserved<br>
+      <span style="font-size:0.72rem">Payments are encrypted and processed securely. Your content unlocks instantly after confirmation.</span>
+      <p class="legal-links"><a href="/terms-of-service.html">Terms of Service</a> · <a href="/privacy-policy.html">Privacy Policy</a> · <a href="/refund-policy.html">Refund Policy</a></p>
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      var TELEGRAM_USERNAME = '{{TELEGRAM_USERNAME}}';
+
+      /* ── Lê params da URL ── */
+      function getParams() {
+        try {
+          var p = new URLSearchParams(window.location.search);
+          return {
+            status: p.get('status'),
+            product: p.get('product_name') || 'Digital Ebook',
+            displayTitle: p.get('display_title') || p.get('product_name') || 'Digital Ebook',
+            amount: p.get('amount') || '',
+            videoId: p.get('video_id') || '',
+            telegramUsername: p.get('telegram_username') || '',
+            orderId: p.get('order_id') || '',
+            buyerEmail: p.get('buyer_email') || ''
+          };
+        } catch (e) { return {}; }
+      }
+
+      /** Checkout from videos-site passes Supabase user in URL; otherwise TELEGRAM_USERNAME env. */
+      function resolveTelegramUser(info) {
+        var fromUrl = String((info && info.telegramUsername) || '').replace(/^@/, '').trim();
+        if (fromUrl) return fromUrl;
+        if (!TELEGRAM_USERNAME || TELEGRAM_USERNAME === '{{TELEGRAM_USERNAME}}') return '';
+        return String(TELEGRAM_USERNAME).replace(/^@/, '').trim();
+      }
+
+      /* ── Entrega pós-pagamento (redirect técnico; copy focada em conteúdo) ── */
+      function goToTelegram(info) {
+        var user = resolveTelegramUser(info);
+        if (!user) return;
+        var title = info.displayTitle || info.product || 'Digital purchase';
+        var lines = [
+          '✅ Access ready',
+          '',
+          '🎬 ' + title,
+          info.amount ? '💰 $' + info.amount + ' USD' : '',
+          info.orderId ? '🧾 Order: ' + info.orderId : '',
+          info.videoId ? '🆔 Ref: ' + info.videoId : '',
+          info.buyerEmail ? '📧 ' + info.buyerEmail : '',
+          '',
+          'Tap Send to open my private library.'
+        ].filter(Boolean).join('\n');
+        var tgUrl = 'https://t.me/' + user + '?text=' + encodeURIComponent(lines);
+        document.getElementById('telegram-btn').href = tgUrl;
+        window.location.replace(tgUrl);
+      }
+
+      /* ── Mostra success page ou banner ── */
+      function handleStatus() {
+        var info = getParams();
+        if (info.status === 'success') {
+          document.getElementById('main-content').style.display = 'none';
+          var sp = document.getElementById('success-page');
+          sp.classList.add('active');
+          goToTelegram(info);
+        } else if (info.status === 'cancel') {
+          var banner = document.getElementById('status-banner');
+          var inner = document.getElementById('banner-inner');
+          inner.className = 'banner-inner error';
+          inner.textContent = '⚠️ Payment was cancelled. You can try again whenever you are ready.';
+          banner.style.display = 'block';
+        }
+      }
+
+      /* ── Constrói URL do checkout ── */
+      function buildCheckoutUrl(price, name, method, displayTitle) {
+        var origin = window.location.origin;
+        var base = origin + '/';
+        var tg = String(TELEGRAM_USERNAME || '').replace(/^@/, '').trim();
+        if (tg === '{{TELEGRAM_USERNAME}}') tg = '';
+        var successParams = new URLSearchParams();
+        successParams.set('status', 'success');
+        successParams.set('product_name', name);
+        successParams.set('display_title', displayTitle || name);
+        successParams.set('amount', String(price));
+        if (tg) successParams.set('telegram_username', tg);
+        var successUrl = base + '?' + successParams.toString();
+        var cancelUrl = base + '?status=cancel';
+        var p = new URLSearchParams();
+        p.set('amount', String(price));
+        p.set('currency', 'USD');
+        p.set('success_url', successUrl);
+        p.set('cancel_url', cancelUrl);
+        p.set('product_name', name);
+        p.set('display_title', displayTitle || name);
+        p.set('method', 'walled');
+        p.set('requestKey', window.crypto.randomUUID());
+        if (tg) p.set('telegram_username', tg);
+        return '/api/paypal-checkout?' + p.toString();
+      }
+
+      var PROMO_PRODUCT_NAME = 'All Content Promo';
+      var PROMO_DISPLAY_TITLE = 'Complete Digital Library';
+      var PROMO_PRICE = '200';
+
+      /* ── Handlers dos botões ── */
+      function attachHandlers() {
+        var promoBtn = document.getElementById('promo-pay');
+        if (promoBtn) {
+          promoBtn.addEventListener('click', function () {
+            window.location.href = buildCheckoutUrl(
+              PROMO_PRICE,
+              PROMO_PRODUCT_NAME,
+              'walled',
+              PROMO_DISPLAY_TITLE
+            );
+          });
+        }
+
+        document.querySelectorAll('.card').forEach(function (card) {
+          var btn = card.querySelector('.paypal-button');
+          if (!btn) return;
+          btn.addEventListener('click', function () {
+            var titleNode = card.querySelector('.card-title');
+            var titleName = titleNode ? String(titleNode.textContent || '').trim() : '';
+            var fallbackName = card.getAttribute('data-name') || 'Digital Ebook';
+            var name = titleName || fallbackName;
+            var price = card.getAttribute('data-price');
+            if (!price) return;
+            window.location.href = buildCheckoutUrl(price, name, 'walled', titleName || fallbackName);
+          });
+        });
+      }
+
+      handleStatus();
+      attachHandlers();
+    })();
+  </script>
+</body>
+</html>
+
