@@ -6,12 +6,15 @@ The storefront and checkout live on this service. All checkout buttons and legac
 
 Configure these values in the secure site's deployment environment:
 
+The current deployment uses fixed pricing: `.env.txt`, `.env.example`, and `render.yaml` contain only the nine required variables for that mode. Import `.env.txt` into the hosting environment; Node's default dotenv loader reads `.env`, not `.env.txt`. The host supplies `PORT` automatically. Product IDs and prices are defined only in `WALLED_FIXED_PRODUCTS_JSON`; `WALLED_PRODUCT_ID`, `WALLED_FIXED_PRICE_USD`, and `WALLED_ALLOWED_PRICES_USD` are unnecessary for this configuration.
+
+- `NODE_ENV=production`: required for live Walled sessions on the deployed service; local development should use Development credentials and a non-production environment.
 - `WALLED_API_BASE_URL`: the Walled Integrations API base URL, including `/api/v1/integrations`.
 - `WALLED_APP_ORIGIN`: this service's public HTTPS origin, with no trailing slash.
 - `WALLED_API_KEY`: server-side API key for the same Walled environment as the webhook.
 - `WALLED_PRODUCT_ID`: Walled product UUID when variable pricing is enabled.
-- `WALLED_VARIABLE_PRICING=true`: enable only when that Walled product supports variable pricing. Video prices are read from Supabase on the server.
-- `WALLED_FIXED_PRODUCTS_JSON`: for fixed-price mode, a JSON object mapping exact USD prices to Walled product UUIDs. Include the secure storefront's catalog amounts and the $200 library offer, plus main-store video prices when using fixed-price mode.
+- `WALLED_VARIABLE_PRICING=false`: the current mode uses the exact product mapping. Set to `true` only when switching to a product that supports variable pricing. Video prices are read from Supabase on the server.
+- `WALLED_FIXED_PRODUCTS_JSON`: for fixed-price mode, a JSON object mapping exact USD prices to Walled product UUIDs. Include the secure storefront's catalog amounts and the $150 library offer, plus main-store video prices when using fixed-price mode.
 - `WALLED_ALLOWED_PRICES_USD`: comma-separated exact secure storefront catalog prices when using a variable-pricing product. The secure catalog will reject any amount not listed here.
 - `WALLED_WEBHOOK_SECRET`: signing secret for the Walled webhook.
 - `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`: server-only credentials for the same Supabase project as the main video store. The secure service reads video prices and records Walled orders, webhook events, and confirmed purchases.
