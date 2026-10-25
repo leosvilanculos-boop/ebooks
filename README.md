@@ -36,3 +36,9 @@ On the main video site, set `EBOOKS_SITE_URL` to the same secure HTTPS origin. I
 - `POST /api/webhooks/walled`: validates and processes signed Walled events idempotently.
 - Legacy payment checkout URLs remain compatible but route to Walled. Legacy direct charge and FX/link endpoints are disabled.
 - `GET /api/health`: reports whether Supabase and Walled settings are present.
+
+## Content delivery after payment
+
+After Walled confirms the stored order as paid, `/api/walled-status` reads the purchased video's `product_link` from the shared Supabase project. The confirmation screen displays that link with open and copy actions. Missing or invalid links fall back to a Telegram button using `site_config.telegram_username`, the same setting managed in the main site's admin panel. `TELEGRAM_USERNAME` is used only if that shared setting is empty. Bundle purchases also use Telegram.
+
+Delivery data is not returned for pending, mismatched or revoked payments. Payment responses are private and not cached. Deploy `delivery.js`, the updated server and Walled routes, and `public/js/payment-success.js` together on the Secure service. Run `npm run test:delivery` to verify the delivery flow without creating live payments.

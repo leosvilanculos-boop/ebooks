@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import { resolveOrderDelivery } from './delivery.js';
 
 const ALLOWED_EVENTS = new Set([
   'payment.succeeded', 'payment.failed', 'payment.expired',
@@ -252,13 +253,27 @@ export function registerWalledRoutes(app, { getVideoForCheckout, getAllVideosFor
   app.get('/api/walled-checkout', startCheckout);
 
   app.get('/payment/success', (req, res) => {
-    const sessionId = String(req.query.sessionId || '');
-    const sessionJson = JSON.stringify(sessionId).replace(/</g, '\\u003c');
-    res.type('html').send(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Payment status</title><main style="font:16px system-ui;max-width:36rem;margin:15vh auto;padding:1.5rem"><h1>Checking your payment</h1><p id="status">Your payment is being confirmed. This may take a moment.</p><a id="delivery" hidden target="_blank" rel="noopener">Get your content</a><p><a href="/">Return to store</a></p></main><script>const id=${sessionJson};let tries=0;async function check(){if(!id){document.querySelector('#status').textContent='Payment reference is missing. Contact support.';return}try{const r=await fetch('/api/walled-status?sessionId='+encodeURIComponent(id));const d=await r.json();if(r.ok&&d.status==='paid'){document.querySelector('h1').textContent='Payment confirmed';document.querySelector('#status').textContent='Your purchase has been recorded.';const lines=['Hello, I just paid for '+(d.title||'my purchase')+'.','Amount: '+d.amount+' '+d.currency+'.','Payment reference: '+id+'.','Please send me access to my purchase.'].join('\\n');const user=String(d.telegram_username||'').replace(/^@/,'').trim();const link=document.querySelector('#delivery');link.href=user?'https://t.me/'+encodeURIComponent(user)+'?text='+encodeURIComponent(lines):'https://t.me/share/url?url=&text='+encodeURIComponent(lines);link.hidden=false;return}if(d.status==='refunded'||d.status==='disputed'||d.status==='dispute_lost'){document.querySelector('#status').textContent='Payment status: '+d.status;return}}catch(e){}if(++tries<8)setTimeout(check,2500);else document.querySelector('#status').textContent='Payment is still being confirmed. You can safely close this page; the confirmation will be processed automatically.'}check();</script>`);
+    res.set('Cache-Control', 'no-store, private');
+    res.type('html').send(`<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="referrer" content="no-referrer"><title>Payment status</title>
+<style>
+  * { box-sizing: border-box; } [hidden] { display: none !important; }
+  body { margin: 0; font: 16px/1.6 system-ui, sans-serif; color: #fafafa; background: #09090b; }
+  main { max-width: 36rem; margin: 10vh auto; padding: 1.5rem; }
+  h1 { line-height: 1.2; } p { color: #c4c4ce; }
+  label { display: block; margin-bottom: .5rem; font-weight: 600; }
+  input { width: 100%; min-height: 46px; padding: .7rem; border: 1px solid #444; border-radius: 8px; background: #18181b; color: #fff; font: inherit; font-size: .9rem; }
+  button { margin-top: .6rem; min-height: 44px; padding: .6rem 1rem; border: 1px solid #555; border-radius: 8px; background: #27272a; color: #fff; font: inherit; cursor: pointer; }
+  #delivery { display: block; margin-top: 1.2rem; padding: .8rem 1rem; border-radius: 10px; text-align: center; color: #191919; background: #ffd04a; font-weight: 700; text-decoration: none; }
+  a { color: #b4b7ff; }
+</style></head><body><main><h1 id="payment-heading">Checking your payment</h1><p id="status" role="status" aria-live="polite">Your payment is being confirmed. This may take a moment.</p>
+<div id="content-link-wrap" hidden><label for="content-link">Your content link</label><input id="content-link" type="text" readonly><button id="copy-content-link" type="button">Copy link</button></div>
+<a id="delivery" hidden target="_blank" rel="noopener noreferrer">Get your content</a><p><a href="/">Return to store</a></p></main><script src="/js/payment-success.js"></script></body></html>`);
   });
   app.get('/payment/cancel', (req, res) => res.redirect('/?status=cancel'));
 
   app.get('/api/walled-status', async (req, res) => {
+    res.set('Cache-Control', 'no-store, private');
     const c = config();
     if (!isConfigured(c)) return res.status(503).json({ error: 'Walled checkout is not configured.' });
     const sessionId = String(req.query.sessionId || '').trim();
@@ -279,15 +294,20 @@ export function registerWalledRoutes(app, { getVideoForCheckout, getAllVideosFor
         || (order.environment && current.environment !== order.environment)) {
         return res.status(409).json({ error: 'Payment details do not match this order.' });
       }
-      await applyPaymentState(supabase, order, current, recordWalledPurchase);
-      const status = current.status || order.status;
-      if (status !== 'paid') return res.json({ status });
+      if (['refunded', 'disputed', 'dispute_lost'].includes(order.status)) {
+        return res.json({ status: order.status });
+      }
+      const status = await applyPaymentState(supabase, order, current, recordWalledPurchase);
+      if (current.status !== 'paid' || status !== 'paid') {
+        return res.json({ status: current.status !== 'paid' ? current.status : status });
+      }
+      const delivery = await resolveOrderDelivery(order, { getVideoForCheckout, getTelegramUsername });
       return res.json({
         status,
         title: order.title,
         amount: Number(order.amount_minor) / 100,
         currency: String(order.currency || 'usd').toUpperCase(),
-        telegram_username: typeof getTelegramUsername === 'function' ? await getTelegramUsername() : '',
+        ...delivery,
       });
     } catch (error) {
       console.error('Walled status lookup failed:', error?.message || error);
@@ -344,8 +364,8 @@ async function applyPaymentState(supabase, order, payment, recordPurchase) {
     throw new Error('Walled payment status does not match the stored order.');
   }
   const terminal = new Set(['refunded', 'disputed', 'dispute_lost']);
-  if (terminal.has(order.status) && status !== order.status) return;
-  if (order.status === 'paid' && ['pending', 'failed', 'expired'].includes(status)) return;
+  if (terminal.has(order.status) && status !== order.status) return order.status;
+  if (order.status === 'paid' && ['pending', 'failed', 'expired'].includes(status)) return order.status;
   if (status === 'paid' && order.status !== 'paid') {
     if (typeof recordPurchase !== 'function') throw new Error('Walled purchase recorder is unavailable.');
     const result = await recordPurchase(payment, order);
@@ -358,8 +378,9 @@ async function applyPaymentState(supabase, order, payment, recordPurchase) {
   if (!updated) {
     const { data: latest, error: reloadError } = await supabase.from('walled_orders').select('status').eq('order_id', order.order_id).maybeSingle();
     if (reloadError) throw reloadError;
-    if (latest?.status === 'paid' && ['pending', 'failed', 'expired'].includes(status)) return;
-    if (terminal.has(latest?.status)) return;
+    if (latest?.status === 'paid' && ['pending', 'failed', 'expired'].includes(status)) return latest.status;
+    if (terminal.has(latest?.status)) return latest.status;
     throw new Error('Walled order changed while processing; retry reconciliation.');
   }
+  return status;
 }

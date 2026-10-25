@@ -8,6 +8,7 @@ import * as ed from '@noble/ed25519';
 import { createClient } from '@supabase/supabase-js';
 import { registerWalledRoutes } from './walled-checkout.js';
 import { createPurchaseRecorder } from './purchases.js';
+import { resolveStoreTelegram } from './delivery.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -314,7 +315,7 @@ registerWalledRoutes(app, {
     if (error) throw error;
     return data || [];
   },
-  getTelegramUsername: async () => TELEGRAM_USERNAME,
+  getTelegramUsername: () => resolveStoreTelegram(supabase, TELEGRAM_USERNAME),
 });
 
 function isCheckoutQuery(q) {
