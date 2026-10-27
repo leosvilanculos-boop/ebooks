@@ -7,6 +7,14 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: TELEGRAM_USERNAME
+        value: sweet1books
+      - key: WALLED_ENVIRONMENT
+        value: production
+      - key: WALLED_CHECKOUT_ORIGIN
+        value: https://trywalled.com
+      - key: WALLED_STRICT_TEST_MODE
+        value: "false"
       - key: WALLED_API_BASE_URL
         sync: false
       - key: WALLED_APP_ORIGIN

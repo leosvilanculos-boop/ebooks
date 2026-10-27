@@ -39,6 +39,11 @@
       var response = await fetch('/api/walled-status?sessionId=' + encodeURIComponent(sessionId), { cache: 'no-store' });
       var result = await response.json();
       if (response.ok && result.status === 'paid') {
+        if (result.test) {
+          document.getElementById('payment-heading').textContent = 'Test payment confirmed';
+          status.textContent = 'Your Development payment was verified. No live purchase or content access was created.';
+          return;
+        }
         document.getElementById('payment-heading').textContent = 'Payment confirmed';
         var productLink = safeLink(result.product_link);
         if (productLink) {

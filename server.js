@@ -15,8 +15,8 @@ const app = express();
 app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3001;
 const SITE_NAME = process.env.SITE_NAME || 'EbookStore';
-/** Telegram for post-payment redirect (checkout success on this host). Videos-site passes Supabase user via ?telegram_username= when possible. */
-const TELEGRAM_USERNAME = process.env.TELEGRAM_USERNAME || '';
+/** Ebook support contact; video purchases retain the main store's shared contact. */
+const TELEGRAM_USERNAME = String(process.env.TELEGRAM_USERNAME || 'sweet1books').trim().replace(/^@/, '');
 /** Default checkout when `method` is omitted. */
 const CHECKOUT_DEFAULT_METHOD = 'walled';
 const supabaseUrl = String(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '').trim();
@@ -315,7 +315,7 @@ registerWalledRoutes(app, {
     if (error) throw error;
     return data || [];
   },
-  getTelegramUsername: () => resolveStoreTelegram(supabase, TELEGRAM_USERNAME),
+  getTelegramUsername: (order) => resolveStoreTelegram(supabase, TELEGRAM_USERNAME, order),
 });
 
 function isCheckoutQuery(q) {

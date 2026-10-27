@@ -11,6 +11,9 @@ async function withCheckout(options, run) {
     WALLED_API_BASE_URL: 'https://walled.test/api/v1/integrations',
     WALLED_APP_ORIGIN: 'https://secure.test', WALLED_API_KEY: 'test-key',
     WALLED_PRODUCT_ID: 'product-demo',
+    WALLED_VIDEO_BUNDLE_PRODUCT_ID: '',
+    WALLED_VARIABLE_PRICING: 'false',
+    WALLED_FIXED_PRODUCTS_JSON: '{"100":"product-ebook-promo"}',
   };
   const originalEnv = Object.fromEntries(Object.keys(env).map(key => [key, process.env[key]]));
   Object.assign(process.env, env);
@@ -50,7 +53,7 @@ async function withCheckout(options, run) {
   registerWalledRoutes(app, {
     getVideoForCheckout: async id => { calls.videos.push(id); return { product_link: options.link || '' }; },
     getAllVideosForBundle: async () => [],
-    getTelegramUsername: () => resolveStoreTelegram(db, 'secure_fallback'),
+    getTelegramUsername: (order) => resolveStoreTelegram(db, 'sweet1books', order),
     recordWalledPurchase: async () => { calls.records++; return { ok: true }; },
   });
   const server = app.listen(0, '127.0.0.1');
@@ -104,6 +107,29 @@ test('bundle delivery uses Telegram rather than an individual video link', async
     assert.equal(result.product_link, '');
     assert.equal(result.telegram_username, 'main_store');
     assert.deepEqual(calls.videos, []);
+  });
+});
+
+test('ebook purchases use the ebook support contact without reading the video store contact', async () => {
+  await withCheckout({ order: { video_id: null, bundle: false, title: 'Digital Product Launch Blueprint' } }, async (base, calls) => {
+    const response = await fetch(base + '/api/walled-status?sessionId=session-demo&telegram_username=untrusted');
+    const result = await response.json();
+    assert.equal(result.status, 'paid');
+    assert.equal(result.product_link, '');
+    assert.equal(result.delivery_via_telegram, true);
+    assert.equal(result.telegram_username, 'sweet1books');
+    assert.deepEqual(calls.videos, []);
+    assert.equal(calls.telegram, 0);
+  });
+});
+
+test('video bundle checkout cannot use the product reassigned to the ebook promotion', async () => {
+  await withCheckout({}, async (base, calls) => {
+    const response = await fetch(base + '/api/walled-checkout?bundle=true&requestKey=7db78656-8fa2-44a2-9e5d-43efb727cb24');
+    assert.equal(response.status, 503);
+    assert.match(await response.text(), /video bundle requires its own Walled product/);
+    assert.equal(calls.records, 0);
+    assert.equal(calls.telegram, 0);
   });
 });
 

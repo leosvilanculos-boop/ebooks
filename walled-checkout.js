@@ -1,5 +1,7 @@
 import crypto from 'node:crypto';
 import { resolveOrderDelivery } from './delivery.js';
+import { findCatalogPurchase, gatewayName, knownEbookGateway } from './checkout-catalog.js';
+import { checkoutOwner, ownsCheckout, renderCheckoutPage } from './checkout-page.js';
 
 const ALLOWED_EVENTS = new Set([
   'payment.succeeded', 'payment.failed', 'payment.expired',
@@ -7,6 +9,10 @@ const ALLOWED_EVENTS = new Set([
 ]);
 
 function config() {
+  const jsonSetting = name => {
+    try { const value = JSON.parse(process.env[name] || '{}'); return value && typeof value === 'object' && !Array.isArray(value) ? value : {}; }
+    catch { return {}; }
+  };
   let fixedProducts = {};
   try {
     const raw = String(process.env.WALLED_FIXED_PRODUCTS_JSON || '').trim();
@@ -17,6 +23,12 @@ function config() {
     appOrigin: String(process.env.WALLED_APP_ORIGIN || '').trim().replace(/\/+$/, ''),
     apiKey: String(process.env.WALLED_API_KEY || '').trim(),
     productId: String(process.env.WALLED_PRODUCT_ID || '').trim(),
+    videoBundleProductId: String(process.env.WALLED_VIDEO_BUNDLE_PRODUCT_ID || '').trim(),
+    videoProducts: jsonSetting('WALLED_VIDEO_FIXED_PRODUCTS_JSON'),
+    checkoutNames: jsonSetting('WALLED_CHECKOUT_NAMES_JSON'),
+    checkoutOrigin: String(process.env.WALLED_CHECKOUT_ORIGIN || 'https://trywalled.com').trim(),
+    strictTest: String(process.env.WALLED_STRICT_TEST_MODE || '').toLowerCase() === 'true',
+    environment: String(process.env.WALLED_ENVIRONMENT || '').toLowerCase(),
     webhookSecret: String(process.env.WALLED_WEBHOOK_SECRET || '').trim(),
     variablePricing: String(process.env.WALLED_VARIABLE_PRICING || '').trim().toLowerCase() === 'true',
     fixedPriceUsd: Number(process.env.WALLED_FIXED_PRICE_USD),
@@ -25,20 +37,6 @@ function config() {
       .split(',').map((price) => Number(price.trim()))
       .filter((price) => Number.isFinite(price) && price > 0),
   };
-}
-
-function productForPrice(c, amount) {
-  if (c.variablePricing) return { amount, productId: c.productId };
-  const entries = Object.entries(c.fixedProducts || {})
-    .map(([price, productId]) => ({ amount: Number(price), productId: String(productId || '').trim() }))
-    .filter(x => Number.isFinite(x.amount) && x.amount > 0 && x.productId);
-  if (!entries.length && Number.isFinite(c.fixedPriceUsd) && c.fixedPriceUsd > 0 && c.productId) {
-    entries.push({ amount: c.fixedPriceUsd, productId: c.productId });
-  }
-  if (!entries.length) return null;
-  const target = minorUnits(amount);
-  return entries.map(x => ({ ...x, minor: minorUnits(x.amount) }))
-    .sort((a, b) => Math.abs(a.minor - target) - Math.abs(b.minor - target) || a.minor - b.minor)[0];
 }
 
 function exactProductForPrice(c, amount) {
@@ -95,6 +93,61 @@ function orderKey(req) {
 }
 
 export function registerWalledRoutes(app, { getVideoForCheckout, getAllVideosForBundle, getTelegramUsername, recordWalledPurchase }) {
+  function checkoutError(status, message) { return Object.assign(new Error(message), { status }); }
+
+  async function resolvePurchase(input, c) {
+    const isBundle = input.bundle === true || String(input.bundle || '').toLowerCase() === 'true';
+    let video = null;
+    let amount;
+    let title;
+    let selectedProduct;
+    if (isBundle) {
+      if (!c.videoBundleProductId || knownEbookGateway(c.videoBundleProductId)) throw checkoutError(503, 'The video bundle requires its own Walled product. Contact support.');
+      const videos = await getAllVideosForBundle();
+      if (!videos.length) throw checkoutError(404, 'No active videos are available.');
+      amount = 100;
+      title = 'All videos and folders';
+      selectedProduct = { amount, productId: c.videoBundleProductId };
+    } else {
+      const rawId = input.videoId ?? input.video_id;
+      if (rawId != null && typeof rawId !== 'string') throw checkoutError(400, 'Invalid purchase identity.');
+      const videoId = String(rawId || '').trim();
+      if (videoId) {
+        video = await getVideoForCheckout(videoId);
+        if (!video || !video.is_active || video.is_free) throw checkoutError(404, 'This item is not available for purchase.');
+        amount = Number(video.price);
+        title = String(video.title || 'Digital video').slice(0, 180);
+        selectedProduct = exactProductForPrice({ ...c, fixedProducts: c.videoProducts }, amount)
+          || exactProductForPrice(c, amount);
+        if (selectedProduct && knownEbookGateway(selectedProduct.productId)) {
+          throw checkoutError(503, 'This item needs a payment gateway that matches the content being purchased. Contact support.');
+        }
+      } else {
+        const item = findCatalogPurchase(input);
+        if (!item) throw checkoutError(400, 'Choose a product from the store before checkout.');
+        amount = item.amount;
+        title = item.title;
+        selectedProduct = exactProductForPrice(c, amount);
+      }
+    }
+    if (!Number.isFinite(amount) || amount <= 0 || minorUnits(amount) > 99999999) throw checkoutError(400, 'The configured purchase price is invalid.');
+    if (!selectedProduct || minorUnits(selectedProduct.amount) !== minorUnits(amount)) throw checkoutError(503, 'This purchase does not have an exact configured payment price. Contact support.');
+    return { video, amount, title, isBundle, staticCatalogPurchase: !video && !isBundle, selectedProduct,
+      checkoutName: gatewayName(selectedProduct.productId, c.checkoutNames) };
+  }
+
+  const reviewCheckout = async (req, res) => {
+    res.set({ 'Cache-Control': 'no-store, private', 'Referrer-Policy': 'no-referrer', 'X-Frame-Options': 'SAMEORIGIN' });
+    try {
+      const c = config();
+      const purchase = await resolvePurchase(req.query, c);
+      checkoutOwner(req, res, true);
+      const identity = purchase.video ? { videoId: purchase.video.id }
+        : purchase.isBundle ? { bundle: true } : { product_name: purchase.title };
+      return res.type('html').send(renderCheckoutPage(purchase, identity, orderKey(req) || uuid(), req.query.cancelled === '1'));
+    } catch (error) { return res.status(error.status || 500).type('text').send(error.status ? error.message : 'Could not load this purchase. Please try again.'); }
+  };
+
   const startCheckout = async (req, res) => {
     res.set('Cache-Control', 'no-store, private');
     const input = req.method === 'GET' ? req.query : req.body;
@@ -109,64 +162,28 @@ export function registerWalledRoutes(app, { getVideoForCheckout, getAllVideosFor
     if (!input || typeof input !== 'object') return sendError(400, 'Invalid checkout request.');
 
     try {
+      const expectedOrigin = process.env.NODE_ENV === 'production' ? c.appOrigin : `${req.protocol}://${req.get('host')}`;
+      if (req.get('origin') !== expectedOrigin) return sendError(403, 'Open the payment page before starting checkout.');
+      const owner = checkoutOwner(req, res);
+      if (!owner) return sendError(403, 'Open the payment page before starting checkout.');
       const supabase = typeof req.app.locals.getSupabase === 'function' ? req.app.locals.getSupabase() : null;
       if (!supabase) return sendError(503, 'Checkout storage is unavailable.');
       const requestKey = orderKey(req);
       if (!requestKey) return sendError(400, 'Invalid checkout request key.');
 
-      const isBundle = input.bundle === true || String(input.bundle || '').toLowerCase() === 'true';
-      let video = null;
-      let amount;
-      let title;
-      let staticCatalogPurchase = false;
-      if (isBundle) {
-        const videos = await getAllVideosForBundle();
-        if (!videos.length) return sendError(404, 'No active videos are available.');
-        amount = 100;
-        title = 'All videos and folders';
-      } else {
-        const videoId = String(input.videoId || input.video_id || '').trim();
-        if (videoId) {
-          video = await getVideoForCheckout(videoId);
-          if (!video || !video.is_active || video.is_free) return sendError(404, 'This video is not available for purchase.');
-          amount = Number(video.price);
-          title = String(video.title || 'Digital video').slice(0, 180);
-        } else {
-          amount = Number(input.amount);
-          title = String(input.display_title || input.product_name || 'Digital Ebook').slice(0, 180);
-          staticCatalogPurchase = true;
-        }
-      }
-      if (!Number.isFinite(amount) || amount <= 0 || minorUnits(amount) > 99999999) {
-        return sendError(400, 'The configured purchase price is invalid.');
-      }
-      const selectedProduct = staticCatalogPurchase ? exactProductForPrice(c, amount) : productForPrice(c, amount);
-      if (!selectedProduct) return sendError(503, staticCatalogPurchase
-        ? 'This catalog price is not configured for Walled. Add it to WALLED_FIXED_PRODUCTS_JSON or WALLED_ALLOWED_PRICES_USD.'
-        : 'No fixed Walled products are configured.');
+      const { video, amount, title, isBundle, staticCatalogPurchase, selectedProduct } = await resolvePurchase(input, c);
       const requestedAmountMinor = minorUnits(amount);
       const chargedAmountMinor = minorUnits(selectedProduct.amount);
-      const acceptedAmountMinor = input.acceptedAmountMinor == null ? null : Number(input.acceptedAmountMinor);
-      if (req.method === 'GET' && chargedAmountMinor !== requestedAmountMinor) {
-        return sendError(409, 'This price needs an exact Walled product. Add the price to WALLED_FIXED_PRODUCTS_JSON or enable variable pricing for this video.');
-      }
-      if (!c.variablePricing && chargedAmountMinor !== requestedAmountMinor && acceptedAmountMinor == null) {
-        return req.method === 'GET'
-          ? sendError(409, 'The configured Walled product price does not match this purchase.')
-          : res.json({ priceAdjustmentRequired: true, requestedAmountMinor, chargedAmountMinor });
-      }
-      if (!c.variablePricing && chargedAmountMinor !== requestedAmountMinor && acceptedAmountMinor !== chargedAmountMinor) {
-        return sendError(409, 'The selected Walled price changed. Review the updated amount and try again.');
-      }
 
       let { data: order, error } = await supabase.from('walled_orders').select('*').eq('request_key', requestKey).maybeSingle();
       if (error) throw error;
       if (order) {
+        if (!ownsCheckout(order, owner)) return sendError(403, 'This purchase belongs to another checkout session.');
         if (order.video_id !== (video?.id || null) || order.bundle !== isBundle
-          || Number(order.amount_minor) !== chargedAmountMinor || order.product_id !== selectedProduct.productId) {
+          || order.title !== title || Number(order.amount_minor) !== chargedAmountMinor || order.product_id !== selectedProduct.productId) {
           return sendError(409, 'This checkout request key was already used for different purchase details.');
         }
-        if (order.checkout_url) return req.method === 'GET' ? res.redirect(303, order.checkout_url) : res.json({ checkoutUrl: order.checkout_url });
+        if (order.checkout_url) return res.json({ checkoutUrl: order.checkout_url, sessionId: order.session_id, checkoutMode: order.metadata?.checkout_mode || 'redirect' });
         if (!['creating', 'checkout_error'].includes(order.status)) return sendError(409, 'This purchase already has a checkout attempt. Please contact support.');
       } else {
         const orderId = uuid();
@@ -178,6 +195,15 @@ export function registerWalledRoutes(app, { getVideoForCheckout, getAllVideosFor
             video_id: video?.id || null, title, bundle: isBundle ? 'all' : null,
             static_catalog_purchase: staticCatalogPurchase,
             requested_amount_minor: requestedAmountMinor,
+            owner_hash: owner,
+            checkout_request: {
+              productId: selectedProduct.productId, orderId, customerRef: orderId,
+              successUrl: `${c.appOrigin}/payment/success`, cancelUrl: `${c.appOrigin}/payment/cancel?requestKey=${requestKey}`,
+              checkoutMode: 'embedded',
+              ...(c.strictTest && c.environment === 'test' ? { domainMode: 'strict' } : {}),
+              ...(c.variablePricing ? { amount: chargedAmountMinor, currency: 'usd' } : {}),
+              metadata: { video_id: video?.id || '', title, bundle: isBundle ? 'all' : '' },
+            },
           },
         };
         ({ data: order, error } = await supabase.from('walled_orders').insert(row).select('*').single());
@@ -187,13 +213,12 @@ export function registerWalledRoutes(app, { getVideoForCheckout, getAllVideosFor
         }
       }
 
-      const origin = c.appOrigin;
-      const payload = {
+      const payload = order.metadata?.checkout_request || {
         productId: selectedProduct.productId,
         orderId: order.order_id,
         customerRef: order.order_id,
-        successUrl: `${origin}/payment/success`,
-        cancelUrl: `${origin}/payment/cancel`,
+        successUrl: `${c.appOrigin}/payment/success`,
+        cancelUrl: `${c.appOrigin}/payment/cancel`,
         ...(c.variablePricing ? { amount: requestedAmountMinor, currency: 'usd' } : {}),
         metadata: { video_id: video?.id || '', title, bundle: isBundle ? 'all' : '' },
       };
@@ -206,7 +231,7 @@ export function registerWalledRoutes(app, { getVideoForCheckout, getAllVideosFor
       const result = await response.json().catch(() => ({}));
       if (!response.ok) {
         await supabase.from('walled_orders').update({ status: 'checkout_error', last_error: `HTTP ${response.status}` }).eq('order_id', order.order_id);
-        const providerDetail = [
+        let providerDetail = [
           typeof result.error === 'string' ? result.error : '',
           result.error?.code,
           result.error?.message,
@@ -215,6 +240,7 @@ export function registerWalledRoutes(app, { getVideoForCheckout, getAllVideosFor
           result.detail,
         ].filter((value) => typeof value === 'string' && value.trim())
           .join(' | ').replace(/\s+/g, ' ').slice(0, 500);
+        for (const secret of [c.apiKey, c.webhookSecret].filter(Boolean)) providerDetail = providerDetail.split(secret).join('[redacted]');
         console.error('Walled checkout session failed:', {
           status: response.status,
           detail: providerDetail || 'No error details returned',
@@ -224,15 +250,25 @@ export function registerWalledRoutes(app, { getVideoForCheckout, getAllVideosFor
       if (typeof result.checkoutUrl !== 'string' || !/^https:\/\//i.test(result.checkoutUrl) || !result.sessionId) {
         return sendError(502, 'Walled returned an invalid checkout session.');
       }
-      if (Number(result.amount) !== chargedAmountMinor || String(result.currency).toLowerCase() !== 'usd') {
+      let checkoutUrl;
+      try {
+        checkoutUrl = new URL(result.checkoutUrl);
+        if (checkoutUrl.origin !== new URL(c.checkoutOrigin).origin || checkoutUrl.username || checkoutUrl.password) throw new Error();
+      } catch { return sendError(502, 'Walled returned an unexpected checkout address.'); }
+      const checkoutMode = result.checkoutMode || (payload.checkoutMode === 'embedded' ? '' : 'redirect');
+      if (!['embedded', 'redirect'].includes(checkoutMode)) return sendError(502, 'Walled did not confirm how this checkout must open.');
+      if (result.orderId !== order.order_id || result.productId !== selectedProduct.productId
+        || result.customerRef && result.customerRef !== order.order_id
+        || Number(result.amount) !== chargedAmountMinor || String(result.currency).toLowerCase() !== 'usd') {
         await supabase.from('walled_orders').update({
-          session_id: result.sessionId, status: 'checkout_error', last_error: 'Walled price does not match the stored order.',
+          session_id: result.sessionId, status: 'checkout_error', last_error: 'Walled session does not match the stored order.',
         }).eq('order_id', order.order_id);
-        console.error('Walled checkout blocked because the configured product price did not match the order.');
-        return sendError(409, 'The Walled product price does not match this purchase.');
+        console.error('Walled checkout blocked because the returned session did not match the order.');
+        return sendError(409, 'The Walled payment details do not match this purchase.');
       }
       const checkoutEnvironment = String(result.environment || '').toLowerCase();
-      if (process.env.NODE_ENV !== 'production' && !['test', 'development'].includes(checkoutEnvironment)) {
+      if ((process.env.NODE_ENV !== 'production' || c.environment === 'test') && !['test', 'development'].includes(checkoutEnvironment)
+        || c.environment === 'production' && !['production', 'live'].includes(checkoutEnvironment)) {
         await supabase.from('walled_orders').update({ status: 'checkout_error', last_error: 'Non-development session blocked locally.' }).eq('order_id', order.order_id);
         console.error('Walled checkout blocked locally because the API key did not create a Development session.');
         return sendError(409, 'This local checkout was blocked because Walled did not confirm Development mode.');
@@ -240,17 +276,18 @@ export function registerWalledRoutes(app, { getVideoForCheckout, getAllVideosFor
       const { error: saveError } = await supabase.from('walled_orders').update({
         session_id: result.sessionId, checkout_url: result.checkoutUrl,
         status: result.status || 'pending', environment: result.environment || null,
+        metadata: { ...order.metadata, checkout_mode: checkoutMode },
       }).eq('order_id', order.order_id);
       if (saveError) throw saveError;
-      return req.method === 'GET' ? res.redirect(303, result.checkoutUrl) : res.json({ checkoutUrl: result.checkoutUrl });
+      return res.json({ checkoutUrl: checkoutUrl.href, sessionId: result.sessionId, checkoutMode });
     } catch (error) {
       console.error('Walled checkout error:', error?.message || error);
-      return sendError(500, 'Could not start checkout. Please try again.');
+      return sendError(error.status || 500, error.status ? error.message : 'Could not start checkout. Please try again.');
     }
   };
 
   app.post('/api/walled-checkout', startCheckout);
-  app.get('/api/walled-checkout', startCheckout);
+  app.get(['/checkout', '/api/walled-checkout'], reviewCheckout);
 
   app.get('/payment/success', (req, res) => {
     res.set('Cache-Control', 'no-store, private');
@@ -268,9 +305,27 @@ export function registerWalledRoutes(app, { getVideoForCheckout, getAllVideosFor
   a { color: #b4b7ff; }
 </style></head><body><main><h1 id="payment-heading">Checking your payment</h1><p id="status" role="status" aria-live="polite">Your payment is being confirmed. This may take a moment.</p>
 <div id="content-link-wrap" hidden><label for="content-link">Your content link</label><input id="content-link" type="text" readonly><button id="copy-content-link" type="button">Copy link</button></div>
-<a id="delivery" hidden target="_blank" rel="noopener noreferrer">Get your content</a><p><a href="/">Return to store</a></p></main><script src="/js/payment-success.js"></script></body></html>`);
+<a id="delivery" hidden target="_blank" rel="noopener noreferrer">Get your content</a><p>Keep your payment reference for support.</p></main><script src="/js/payment-success.js"></script></body></html>`);
   });
-  app.get('/payment/cancel', (req, res) => res.redirect('/?status=cancel'));
+  app.get('/payment/cancel', async (req, res) => {
+    res.set('Cache-Control', 'no-store, private');
+    try {
+      const db = req.app.locals.getSupabase?.();
+      const key = orderKey(req);
+      const sessionId = typeof req.query.sessionId === 'string' ? req.query.sessionId.trim() : '';
+      if (db && (key || sessionId)) {
+        const { data: order, error } = await db.from('walled_orders').select('*').eq(key ? 'request_key' : 'session_id', key || sessionId).maybeSingle();
+        if (!error && order && ownsCheckout(order, checkoutOwner(req, res))) {
+          const params = new URLSearchParams({ requestKey: order.request_key, cancelled: '1' });
+          if (order.video_id) params.set('video_id', order.video_id);
+          else if (order.bundle) params.set('bundle', 'true');
+          else params.set('product_name', order.title);
+          return res.redirect(303, '/checkout?' + params);
+        }
+      }
+    } catch { /* Cancellation is navigation only; do not modify the order. */ }
+    return res.type('html').send('<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Payment page closed</title><main style="font:16px/1.6 system-ui;max-width:34rem;margin:15vh auto;padding:24px"><h1>Payment page closed</h1><p>Return to the page where you started your purchase to continue. If you completed payment, use your payment confirmation to check its status.</p></main>');
+  });
 
   app.get('/api/walled-status', async (req, res) => {
     res.set('Cache-Control', 'no-store, private');
@@ -284,12 +339,14 @@ export function registerWalledRoutes(app, { getVideoForCheckout, getAllVideosFor
       const { data: order, error } = await supabase.from('walled_orders').select('*').eq('session_id', sessionId).maybeSingle();
       if (error) throw error;
       if (!order) return res.status(404).json({ error: 'Payment reference not found.' });
+      if (!ownsCheckout(order, checkoutOwner(req, res))) return res.status(403).json({ error: 'This purchase belongs to another checkout session.' });
       const response = await fetch(`${c.baseUrl}/checkout/sessions/${encodeURIComponent(sessionId)}`, {
         headers: { Authorization: `Bearer ${c.apiKey}` }, signal: AbortSignal.timeout(10000),
       });
       const current = await response.json().catch(() => ({}));
       if (!response.ok) return res.status(502).json({ error: 'Could not verify payment status.' });
       if (current.orderId !== order.order_id || current.productId !== order.product_id || current.sessionId !== order.session_id
+        || current.customerRef && current.customerRef !== order.order_id
         || Number(current.amount) !== Number(order.amount_minor) || String(current.currency).toLowerCase() !== order.currency
         || (order.environment && current.environment !== order.environment)) {
         return res.status(409).json({ error: 'Payment details do not match this order.' });
@@ -300,6 +357,9 @@ export function registerWalledRoutes(app, { getVideoForCheckout, getAllVideosFor
       const status = await applyPaymentState(supabase, order, current, recordWalledPurchase);
       if (current.status !== 'paid' || status !== 'paid') {
         return res.json({ status: current.status !== 'paid' ? current.status : status });
+      }
+      if (['test', 'development'].includes(String(current.environment || order.environment || '').toLowerCase())) {
+        return res.json({ status: 'paid', test: true, title: order.title, amount: Number(order.amount_minor) / 100, currency: String(order.currency).toUpperCase() });
       }
       const delivery = await resolveOrderDelivery(order, { getVideoForCheckout, getTelegramUsername });
       return res.json({
@@ -335,7 +395,7 @@ export function registerWalledRoutes(app, { getVideoForCheckout, getAllVideosFor
       const data = event.data;
       const { data: order, error } = await supabase.from('walled_orders').select('*').eq('order_id', data.orderId).maybeSingle();
       if (error) throw error;
-      if (!order || data.productId !== order.product_id || data.sessionId !== order.session_id || data.amount !== Number(order.amount_minor) || String(data.currency).toLowerCase() !== order.currency || !data.environment || (order.environment && data.environment !== order.environment)) {
+      if (!order || data.productId !== order.product_id || data.sessionId !== order.session_id || data.customerRef && data.customerRef !== order.order_id || data.amount !== Number(order.amount_minor) || String(data.currency).toLowerCase() !== order.currency || !data.environment || (order.environment && data.environment !== order.environment)) {
         throw new Error('Walled event does not match a stored order.');
       }
       const statusResponse = await fetch(`${c.baseUrl}/checkout/sessions/${encodeURIComponent(order.session_id)}`, {
@@ -359,6 +419,7 @@ async function applyPaymentState(supabase, order, payment, recordPurchase) {
   const status = String(payment.status || '').toLowerCase();
   if (!statuses.has(status)) throw new Error('Unsupported Walled payment status.');
   if (payment.orderId !== order.order_id || payment.productId !== order.product_id || payment.sessionId !== order.session_id
+    || payment.customerRef && payment.customerRef !== order.order_id
     || Number(payment.amount) !== Number(order.amount_minor) || String(payment.currency).toLowerCase() !== order.currency
     || (order.environment && payment.environment !== order.environment)) {
     throw new Error('Walled payment status does not match the stored order.');
@@ -366,7 +427,7 @@ async function applyPaymentState(supabase, order, payment, recordPurchase) {
   const terminal = new Set(['refunded', 'disputed', 'dispute_lost']);
   if (terminal.has(order.status) && status !== order.status) return order.status;
   if (order.status === 'paid' && ['pending', 'failed', 'expired'].includes(status)) return order.status;
-  if (status === 'paid' && order.status !== 'paid') {
+  if (status === 'paid' && order.status !== 'paid' && !['test', 'development'].includes(String(payment.environment || order.environment || '').toLowerCase())) {
     if (typeof recordPurchase !== 'function') throw new Error('Walled purchase recorder is unavailable.');
     const result = await recordPurchase(payment, order);
     if (!result?.ok) throw new Error('Could not persist the confirmed Walled purchase.');

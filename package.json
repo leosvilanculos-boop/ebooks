@@ -5,6 +5,7 @@
   "description": "Ebooks store with Walled checkout",
   "main": "server.js",
   "scripts": {
+    "test:checkout": "node --test scripts/checkout.test.mjs scripts/delivery.test.mjs",
     "test:delivery": "node --test scripts/delivery.test.mjs",
     "start": "node server.js",
     "dev": "node server.js"
