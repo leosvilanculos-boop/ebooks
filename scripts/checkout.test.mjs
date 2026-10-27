@@ -59,7 +59,7 @@ async function withCheckoutServer(options, run) {
   const recorder = createPurchaseRecorder(() => db);
   registerWalledRoutes(app, {
     getVideoForCheckout: async id => ({ id, title: 'Selected video', price: 90, is_active: true, is_free: false, product_link: 'https://content.test/private' }),
-    getAllVideosForBundle: async () => [], getTelegramUsername: async () => 'sweet1books',
+    getAllVideosForBundle: async () => options.bundleVideos || [], getTelegramUsername: async () => 'sweet1books',
     recordWalledPurchase: recorder.recordWalledPurchase,
   });
   const server = app.listen(0, '127.0.0.1');
@@ -73,7 +73,7 @@ async function withCheckoutServer(options, run) {
         const payload = JSON.parse(init.body);
         calls.creates.push({ payload, idempotencyKey: init.headers['Idempotency-Key'] });
         if (options.timeoutOnce && calls.creates.length === 1) throw new Error('Simulated network timeout');
-        const amount = payload.productId === 'ebook-35' ? 3500 : payload.productId === 'ebook-50' ? 5000 : payload.productId === 'ebook-100' ? 10000 : 9000;
+        const amount = payload.metadata.bundle === 'all' ? 10000 : payload.productId === 'ebook-35' ? 3500 : payload.productId === 'ebook-50' ? 5000 : payload.productId === 'ebook-100' ? 10000 : 9000;
         const session = { ...payload, sessionId: crypto.randomUUID(), checkoutUrl: options.checkoutUrl || 'https://checkout.walled.test/session/demo', checkoutMode: options.mode || 'embedded', amount, currency: 'usd', environment: options.providerEnvironment || 'test', status: 'pending', ...options.responseOverrides };
         sessions.set(session.sessionId, session);
         return Response.json(session);
@@ -350,6 +350,65 @@ test('unknown catalog products are rejected and the main-store title is resolved
 test('a video purchase cannot silently use a gateway registered for an ebook', async () => {
   await withCheckoutServer({ env: { WALLED_VIDEO_FIXED_PRODUCTS_JSON: '{}', WALLED_FIXED_PRODUCTS_JSON: '{"90":"7fb048d1-3786-49aa-9cc3-b8944cb5418a"}' } }, async h => {
     assert.equal((await h.review('video_id=registered-video')).response.status, 503);
+    assert.equal(h.calls.creates.length, 0);
+  });
+});
+
+test('a main-store-only price map creates a session without an ebook map or generic product ID', async () => {
+  const productId = 'video-90';
+  await withCheckoutServer({ env: { WALLED_VIDEO_FIXED_PRODUCTS_JSON: JSON.stringify({ 90: productId }), WALLED_FIXED_PRODUCTS_JSON: '{}' } }, async h => {
+    const review = await h.review('video_id=registered-video');
+    assert.equal(review.response.status, 200);
+    assert.match(review.html, /Selected video/);
+    assert.match(review.html, /Video catalog purchase/);
+    assert.equal((await h.post(review)).status, 200);
+    assert.equal(h.calls.creates[0].payload.productId, productId);
+    assert.equal(h.calls.creates[0].payload.metadata.title, 'Selected video');
+    assert.equal(h.calls.creates[0].payload.metadata.video_id, 'registered-video');
+    assert.equal(h.tables.walled_orders[0].amount_minor, 9000);
+  });
+});
+
+test('the complete package uses the exact US$100 main-store map entry without a separate bundle variable', async () => {
+  const productId = 'video-bundle-100';
+  await withCheckoutServer({ bundleVideos: [{ id: 'registered-video' }], env: { WALLED_VIDEO_FIXED_PRODUCTS_JSON: JSON.stringify({ 90: 'video-90', 100: productId }), WALLED_FIXED_PRODUCTS_JSON: '{}' } }, async h => {
+    const review = await h.review('bundle=true&amount=1&productId=untrusted');
+    assert.equal(review.response.status, 200);
+    assert.equal(review.data.autoStart, false);
+    assert.match(review.html, /All videos and folders/);
+    assert.match(review.html, /\$100\.00/);
+    assert.equal((await h.post(review)).status, 200);
+    assert.equal(h.calls.creates[0].payload.productId, productId);
+    assert.equal(h.calls.creates[0].payload.metadata.bundle, 'all');
+    assert.equal(h.calls.creates[0].payload.metadata.title, 'All videos and folders');
+    assert.equal(h.tables.walled_orders[0].bundle, true);
+    assert.equal(h.tables.walled_orders[0].amount_minor, 10000);
+  });
+});
+
+test('putting known ebook IDs in the main-store map cannot change the offer they represent', async () => {
+  await withCheckoutServer({ bundleVideos: [{ id: 'registered-video' }], env: { WALLED_VIDEO_FIXED_PRODUCTS_JSON: JSON.stringify({
+    90: '7fb048d1-3786-49aa-9cc3-b8944cb5418a', 100: '63925aa1-3109-4481-8e4d-d42c03c96b80',
+  }) } }, async h => {
+    for (const query of ['video_id=registered-video', 'bundle=true']) {
+      const review = await h.review(query);
+      assert.equal(review.response.status, 503);
+      assert.match(review.html, /payment gateway that matches the content/);
+    }
+    assert.equal(h.calls.creates.length, 0);
+  });
+});
+
+test('an explicit bundle override retains priority over the US$100 map entry', async () => {
+  await withCheckoutServer({ bundleVideos: [{ id: 'registered-video' }], env: { WALLED_VIDEO_BUNDLE_PRODUCT_ID: 'dedicated-bundle', WALLED_VIDEO_FIXED_PRODUCTS_JSON: '{"100":"mapped-bundle"}' } }, async h => {
+    assert.equal((await h.post(await h.review('bundle=true'))).status, 200);
+    assert.equal(h.calls.creates[0].payload.productId, 'dedicated-bundle');
+  });
+});
+
+test('the complete package never falls back to another price or to the ebook price map', async () => {
+  await withCheckoutServer({ bundleVideos: [{ id: 'registered-video' }] }, async h => {
+    assert.equal((await h.review('bundle=true')).response.status, 503);
     assert.equal(h.calls.creates.length, 0);
   });
 });

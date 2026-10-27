@@ -112,7 +112,7 @@
     }
   ],
   "securePublication": "Pending: deploy Telegram support @sweet1books, Family Comfort Food Recipes at US$50, and ALL EBooks Promo at US$100.",
-  "videoBundle": "Requires a separate WALLED_VIDEO_BUNDLE_PRODUCT_ID after deployment. The existing US$100 Walled product now sells ebooks.",
+  "videoBundle": "Uses the exact US$100 entry in WALLED_VIDEO_FIXED_PRODUCTS_JSON unless WALLED_VIDEO_BUNDLE_PRODUCT_ID is explicitly set. The configured gateway must match the delivered offer; the existing ALL EBooks Promo product describes 17 ebooks.",
   "review": "Three gateways still require review. Selling rights, delivery evidence, content access, and substantiation of health and review/customer claims remain to be supplied by the seller.",
   "environmentFiles": [
     ".env.txt",

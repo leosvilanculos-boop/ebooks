@@ -8,15 +8,17 @@ export function contentLink(value) {
 }
 
 export async function resolveStoreTelegram(supabase, fallback = '', order = null) {
-  let username = fallback;
-  // Ebook orders use this store's contact; video and video bundle orders use site_config.
-  if (supabase && (!order || order.video_id || order.bundle)) {
+  const mainStoreOrder = !order || Boolean(order.video_id || order.bundle);
+  // Contacts belong to the purchased offer, not to the shared checkout host.
+  // Never send a main-store customer to the ebook store's fallback contact.
+  let username = mainStoreOrder ? '' : fallback;
+  if (supabase && mainStoreOrder) {
     const { data, error } = await supabase.from('site_config')
       .select('telegram_username').limit(1).maybeSingle();
     if (error) throw error;
     if (data?.telegram_username) username = data.telegram_username;
   }
-  return String(username || '').replace(/^@/, '').trim();
+  return String(username || '').trim().replace(/^@/, '');
 }
 
 // Call only after the payment provider has confirmed this stored order as paid.

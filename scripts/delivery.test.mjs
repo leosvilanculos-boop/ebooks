@@ -12,6 +12,7 @@ async function withCheckout(options, run) {
     WALLED_APP_ORIGIN: 'https://secure.test', WALLED_API_KEY: 'test-key',
     WALLED_PRODUCT_ID: 'product-demo',
     WALLED_VIDEO_BUNDLE_PRODUCT_ID: '',
+    WALLED_VIDEO_FIXED_PRODUCTS_JSON: '{}',
     WALLED_VARIABLE_PRICING: 'false',
     WALLED_FIXED_PRODUCTS_JSON: '{"100":"product-ebook-promo"}',
   };
@@ -38,7 +39,7 @@ async function withCheckout(options, run) {
       async maybeSingle() {
         if (table === 'site_config') {
           calls.telegram++;
-          return { data: { telegram_username: '@main_store' }, error: null };
+          return { data: { telegram_username: options.mainTelegram ?? '@main_store' }, error: null };
         }
         assert.equal(table, 'walled_orders');
         if (updates && options.refundDuringUpdate) state.status = 'refunded';
@@ -123,11 +124,39 @@ test('ebook purchases use the ebook support contact without reading the video st
   });
 });
 
-test('video bundle checkout cannot use the product reassigned to the ebook promotion', async () => {
+test('a main-store purchase with no configured contact never falls back to the ebook Telegram', async () => {
+  for (const order of [{ video_id: 'registered-video', bundle: false }, { video_id: null, bundle: true }]) {
+    await withCheckout({ order, mainTelegram: '' }, async (base, calls) => {
+      const result = await (await fetch(base + '/api/walled-status?sessionId=session-demo')).json();
+      assert.equal(result.status, 'paid');
+      assert.equal(result.product_link, '');
+      assert.equal(result.telegram_username, '');
+      assert.equal(calls.telegram, 1);
+    });
+  }
+});
+
+test('store contacts remain separate even when the shared database is unavailable', async () => {
+  assert.equal(await resolveStoreTelegram(null, 'sweet1books', { video_id: 'registered-video' }), '');
+  assert.equal(await resolveStoreTelegram(null, 'sweet1books', { bundle: true }), '');
+  assert.equal(await resolveStoreTelegram(null, 'sweet1books', { video_id: null, bundle: false }), 'sweet1books');
+});
+
+test('the complete ebook promotion uses ebook Telegram and never the main-store contact', async () => {
+  await withCheckout({ order: { video_id: null, bundle: false, title: 'ALL EBooks Promo', amount_minor: 10000 }, payment: { amount: 10000 } }, async (base, calls) => {
+    const result = await (await fetch(base + '/api/walled-status?sessionId=session-demo')).json();
+    assert.equal(result.status, 'paid');
+    assert.equal(result.telegram_username, 'sweet1books');
+    assert.deepEqual(calls.videos, []);
+    assert.equal(calls.telegram, 0);
+  });
+});
+
+test('video bundle checkout requires an explicit main-store product mapping', async () => {
   await withCheckout({}, async (base, calls) => {
     const response = await fetch(base + '/api/walled-checkout?bundle=true&requestKey=7db78656-8fa2-44a2-9e5d-43efb727cb24');
     assert.equal(response.status, 503);
-    assert.match(await response.text(), /video bundle requires its own Walled product/);
+    assert.match(await response.text(), /complete package needs a Walled product configured for US\$100/);
     assert.equal(calls.records, 0);
     assert.equal(calls.telegram, 0);
   });

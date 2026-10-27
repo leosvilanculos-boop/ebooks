@@ -40,12 +40,18 @@ function config() {
   };
 }
 
-function exactProductForPrice(c, amount) {
+function fixedProductForPrice(products, amount) {
   const target = minorUnits(amount);
-  const entries = Object.entries(c.fixedProducts || {})
+  const entries = Object.entries(products || {})
     .map(([price, productId]) => ({ amount: Number(price), productId: String(productId || '').trim() }))
     .filter((x) => Number.isFinite(x.amount) && x.amount > 0 && x.productId);
   const exact = entries.find((x) => minorUnits(x.amount) === target);
+  return exact || null;
+}
+
+function exactProductForPrice(c, amount) {
+  const target = minorUnits(amount);
+  const exact = fixedProductForPrice(c.fixedProducts, amount);
   if (exact) return exact;
   if (c.variablePricing && c.productId && c.allowedPrices.some((price) => minorUnits(price) === target)) {
     return { amount, productId: c.productId };
@@ -63,7 +69,8 @@ function isConfigured(c) {
     const origin = new URL(c.appOrigin);
     return base.protocol === 'https:' && origin.protocol === 'https:' && origin.origin === c.appOrigin
       && origin.pathname === '/' && !origin.search && !origin.hash
-      && Boolean(c.apiKey && (c.productId || (!c.variablePricing && Object.keys(c.fixedProducts || {}).length)));
+      && Boolean(c.apiKey && (c.productId || c.videoBundleProductId || Object.keys(c.videoProducts || {}).length
+        || (!c.variablePricing && Object.keys(c.fixedProducts || {}).length)));
   } catch { return false; }
 }
 function uuid() { return crypto.randomUUID(); }
@@ -103,12 +110,16 @@ export function registerWalledRoutes(app, { getVideoForCheckout, getAllVideosFor
     let title;
     let selectedProduct;
     if (isBundle) {
-      if (!c.videoBundleProductId || knownEbookGateway(c.videoBundleProductId)) throw checkoutError(503, 'The video bundle requires its own Walled product. Contact support.');
+      amount = 100;
+      // The explicit main-store map includes the complete package at its exact price.
+      // The dedicated setting remains an optional override for older deployments.
+      selectedProduct = c.videoBundleProductId ? { amount, productId: c.videoBundleProductId }
+        : fixedProductForPrice(c.videoProducts, amount);
+      if (!selectedProduct) throw checkoutError(503, 'The complete package needs a Walled product configured for US$100. Contact support.');
+      if (knownEbookGateway(selectedProduct.productId)) throw checkoutError(503, 'This package needs a payment gateway that matches the content being purchased. Contact support.');
       const videos = await getAllVideosForBundle();
       if (!videos.length) throw checkoutError(404, 'No active videos are available.');
-      amount = 100;
       title = 'All videos and folders';
-      selectedProduct = { amount, productId: c.videoBundleProductId };
     } else {
       const rawId = input.videoId ?? input.video_id;
       if (rawId != null && typeof rawId !== 'string') throw checkoutError(400, 'Invalid purchase identity.');
@@ -118,8 +129,8 @@ export function registerWalledRoutes(app, { getVideoForCheckout, getAllVideosFor
         if (!video || !video.is_active || video.is_free) throw checkoutError(404, 'This item is not available for purchase.');
         amount = Number(video.price);
         title = String(video.title || 'Digital video').slice(0, 180);
-        selectedProduct = exactProductForPrice({ ...c, fixedProducts: c.videoProducts }, amount)
-          || exactProductForPrice(c, amount);
+        const mainStoreProduct = fixedProductForPrice(c.videoProducts, amount);
+        selectedProduct = mainStoreProduct || exactProductForPrice(c, amount);
         if (selectedProduct && knownEbookGateway(selectedProduct.productId)) {
           throw checkoutError(503, 'This item needs a payment gateway that matches the content being purchased. Contact support.');
         }
@@ -158,7 +169,8 @@ export function registerWalledRoutes(app, { getVideoForCheckout, getAllVideosFor
       : res.status(status).json({ error });
     const c = config();
     if (!isConfigured(c)) return sendError(503, 'Walled checkout is not configured on the server.');
-    if (!c.variablePricing && !Object.keys(c.fixedProducts || {}).length && (!Number.isFinite(c.fixedPriceUsd) || c.fixedPriceUsd <= 0)) {
+    if (!c.variablePricing && !Object.keys(c.fixedProducts || {}).length && !Object.keys(c.videoProducts || {}).length
+      && !c.videoBundleProductId && (!Number.isFinite(c.fixedPriceUsd) || c.fixedPriceUsd <= 0)) {
       return sendError(503, 'Configure at least one fixed Walled product price.');
     }
     if (!input || typeof input !== 'object') return sendError(400, 'Invalid checkout request.');
