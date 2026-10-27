@@ -117,9 +117,9 @@ test('main-store landing page shows the selected order, payment name and button 
     const review = await h.review('video_id=registered-video&amount=0.01&display_title=Fake');
     assert.equal(review.response.status, 200);
     assert.match(review.html, /\$90\.00/);
-    assert.match(review.html, /Product name in the payment form/);
+    assert.match(review.html, /Shown on the payment form as/);
     assert.match(review.html, /id="pay-button"/);
-    assert.match(review.html, /Pay with confidence/);
+    assert.match(review.html, /Checkout/);
     assert.equal(review.data.autoStart,false);
     assert.doesNotMatch(review.html, /Best Sellers|class="catalog"|mock-test-key|mock-signing-secret|Fake/);
     assert.equal(h.calls.creates.length, 0);
@@ -134,7 +134,7 @@ test('Secure catalog purchases start payment directly without the confidence scr
     assert.equal(payment.data.autoStart,true);
     assert.match(payment.html,/Complete your payment/);
     assert.match(payment.html,/id="pay-button" type="button" hidden/);
-    assert.doesNotMatch(payment.html,/Pay with confidence|One more step|Ready to continue|Product name in the payment form/);
+    assert.doesNotMatch(payment.html,/Shown on the payment form as|Ready to continue|Pay with confidence/);
     assert.equal(h.calls.creates.length,0);
   });
 });

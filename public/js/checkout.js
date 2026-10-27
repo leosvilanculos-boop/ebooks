@@ -24,7 +24,7 @@
       } else if (response.ok && ['failed', 'expired', 'refunded', 'disputed', 'dispute_lost'].indexOf(result.status) !== -1) {
         status.textContent = 'Payment status: ' + result.status + '. Please contact the store if you need help.';
       } else {
-        status.textContent = 'Your payment is still being verified. Please keep this page open.';
+        status.textContent = 'Verifying payment… keep this page open.';
       }
     } catch (error) { status.textContent = 'We could not verify payment yet. Keep your payment reference and try again shortly.'; }
     finally { verificationPending = false; }
@@ -45,7 +45,7 @@
     if (pending || mounted) return;
     pending = true;
     button.disabled = true;
-    status.textContent = 'Preparing your secure payment…';
+    status.textContent = 'Loading payment…';
     try {
       if (!session) {
         var response = await fetch('/api/walled-checkout', {
@@ -71,7 +71,7 @@
           if (message && message.sessionId === session.sessionId) verifyPayment(session.sessionId);
         },
       });
-      status.textContent = 'Complete your payment in the form below.';
+      status.textContent = '';
       button.hidden = true;
     } catch (error) {
       status.textContent = error.message || 'Payment could not be started. Please try again.';
