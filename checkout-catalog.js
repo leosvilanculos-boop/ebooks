@@ -17,13 +17,23 @@ export function findCatalogPurchase(input) {
   return item && Number.isFinite(item.amount) && item.amount > 0 ? item : null;
 }
 
-let gatewayNames = new Map();
-try {
-  const audit = JSON.parse(readFileSync(new URL('./WALLED_PRODUCT_UPDATES.json', import.meta.url), 'utf8'));
-  gatewayNames = new Map(audit.verifiedProducts.map(product => [new URL(product.productUrl).pathname.split('/').pop(), product.name]));
-} catch { /* Other installations can configure WALLED_CHECKOUT_NAMES_JSON. */ }
+// Ebook gateways are whatever IDs are currently configured for the ebook store.
+// Product IDs that were renamed in Walled and moved to WALLED_VIDEO_FIXED_PRODUCTS_JSON
+// are therefore accepted for videos; an ID present in both maps is still refused.
+function configuredEbookIds() {
+  const ids = new Set();
+  try {
+    const map = JSON.parse(String(process.env.WALLED_FIXED_PRODUCTS_JSON || '').trim() || '{}');
+    if (map && typeof map === 'object' && !Array.isArray(map)) {
+      for (const id of Object.values(map)) if (String(id || '').trim()) ids.add(String(id).trim());
+    }
+  } catch { /* invalid JSON means no ebook gateways are configured */ }
+  const single = String(process.env.WALLED_PRODUCT_ID || '').trim();
+  if (single) ids.add(single);
+  return ids;
+}
 
-export function knownEbookGateway(productId) { return gatewayNames.has(productId); }
+export function knownEbookGateway(productId) { return configuredEbookIds().has(String(productId || '').trim()); }
 export function gatewayName(productId, configuredNames = {}) {
-  return gatewayNames.get(productId) || String(configuredNames[productId] || '').trim();
+  return String(configuredNames[productId] || '').trim();
 }

@@ -386,9 +386,9 @@ test('the complete package uses the exact US$100 main-store map entry without a 
   });
 });
 
-test('putting known ebook IDs in the main-store map cannot change the offer they represent', async () => {
+test('an ID configured in the ebook map cannot also be used for videos', async () => {
   await withCheckoutServer({ bundleVideos: [{ id: 'registered-video' }], env: { WALLED_VIDEO_FIXED_PRODUCTS_JSON: JSON.stringify({
-    90: '7fb048d1-3786-49aa-9cc3-b8944cb5418a', 100: '63925aa1-3109-4481-8e4d-d42c03c96b80',
+    90: 'ebook-90', 100: 'ebook-100',
   }) } }, async h => {
     for (const query of ['video_id=registered-video', 'bundle=true']) {
       const review = await h.review(query);
@@ -396,6 +396,19 @@ test('putting known ebook IDs in the main-store map cannot change the offer they
       assert.match(review.html, /payment gateway that matches the content/);
     }
     assert.equal(h.calls.creates.length, 0);
+  });
+});
+
+test('former ebook gateways renamed for videos work once they are no longer in the ebook map', async () => {
+  const video90 = '7fb048d1-3786-49aa-9cc3-b8944cb5418a';
+  const bundle100 = '63925aa1-3109-4481-8e4d-d42c03c96b80';
+  await withCheckoutServer({ bundleVideos: [{ id: 'registered-video' }], env: {
+    WALLED_VIDEO_FIXED_PRODUCTS_JSON: JSON.stringify({ 90: video90, 100: bundle100 }),
+    WALLED_FIXED_PRODUCTS_JSON: JSON.stringify({ 90: 'new-ebook-90', 100: 'new-ebook-100' }),
+  } }, async h => {
+    assert.equal((await h.post(await h.review('video_id=registered-video'))).status, 200);
+    assert.equal((await h.post(await h.review('bundle=true'))).status, 200);
+    assert.deepEqual(h.calls.creates.map(c => c.payload.productId), [video90, bundle100]);
   });
 });
 
