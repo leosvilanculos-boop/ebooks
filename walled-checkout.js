@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import { resolveOrderDelivery } from './delivery.js';
 import { findCatalogPurchase, gatewayName, knownEbookGateway } from './checkout-catalog.js';
 import { checkoutOwner, ownsCheckout, renderCheckoutPage } from './checkout-page.js';
+import { walledErrorDetails } from './walled-errors.js';
 
 const ALLOWED_EVENTS = new Set([
   'payment.succeeded', 'payment.failed', 'payment.expired',
@@ -144,7 +145,8 @@ export function registerWalledRoutes(app, { getVideoForCheckout, getAllVideosFor
       checkoutOwner(req, res, true);
       const identity = purchase.video ? { videoId: purchase.video.id }
         : purchase.isBundle ? { bundle: true } : { product_name: purchase.title };
-      return res.type('html').send(renderCheckoutPage(purchase, identity, orderKey(req) || uuid(), req.query.cancelled === '1'));
+      const review = req.path === '/checkout/review' || !purchase.staticCatalogPurchase;
+      return res.type('html').send(renderCheckoutPage(purchase, identity, orderKey(req) || uuid(), req.query.cancelled === '1', review));
     } catch (error) { return res.status(error.status || 500).type('text').send(error.status ? error.message : 'Could not load this purchase. Please try again.'); }
   };
 
@@ -199,7 +201,6 @@ export function registerWalledRoutes(app, { getVideoForCheckout, getAllVideosFor
             checkout_request: {
               productId: selectedProduct.productId, orderId, customerRef: orderId,
               successUrl: `${c.appOrigin}/payment/success`, cancelUrl: `${c.appOrigin}/payment/cancel?requestKey=${requestKey}`,
-              checkoutMode: 'embedded',
               ...(c.strictTest && c.environment === 'test' ? { domainMode: 'strict' } : {}),
               ...(c.variablePricing ? { amount: chargedAmountMinor, currency: 'usd' } : {}),
               metadata: { video_id: video?.id || '', title, bundle: isBundle ? 'all' : '' },
@@ -211,6 +212,19 @@ export function registerWalledRoutes(app, { getVideoForCheckout, getAllVideosFor
           if (error.code === '23505') return sendError(409, 'Checkout is already being created. Please retry shortly.');
           throw error;
         }
+      }
+
+      // The published gateway API rejects checkoutMode in request bodies.
+      // A known HTTP 422 did not create a session, so an old rejected request
+      // can be corrected using its existing order, owner and idempotency key.
+      if (order.status === 'checkout_error' && /^HTTP 422\b/.test(order.last_error || '')
+        && order.metadata?.checkout_request?.checkoutMode) {
+        const correctedRequest = { ...order.metadata.checkout_request };
+        delete correctedRequest.checkoutMode;
+        const metadata = { ...order.metadata, checkout_request: correctedRequest };
+        const { error: repairError } = await supabase.from('walled_orders').update({ metadata }).eq('order_id', order.order_id);
+        if (repairError) throw repairError;
+        order.metadata = metadata;
       }
 
       const payload = order.metadata?.checkout_request || {
@@ -230,17 +244,8 @@ export function registerWalledRoutes(app, { getVideoForCheckout, getAllVideosFor
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) {
-        await supabase.from('walled_orders').update({ status: 'checkout_error', last_error: `HTTP ${response.status}` }).eq('order_id', order.order_id);
-        let providerDetail = [
-          typeof result.error === 'string' ? result.error : '',
-          result.error?.code,
-          result.error?.message,
-          result.code,
-          result.message,
-          result.detail,
-        ].filter((value) => typeof value === 'string' && value.trim())
-          .join(' | ').replace(/\s+/g, ' ').slice(0, 500);
-        for (const secret of [c.apiKey, c.webhookSecret].filter(Boolean)) providerDetail = providerDetail.split(secret).join('[redacted]');
+        const providerDetail = walledErrorDetails(result, [c.apiKey, c.webhookSecret]);
+        await supabase.from('walled_orders').update({ status: 'checkout_error', last_error: `HTTP ${response.status} | ${providerDetail}` }).eq('order_id', order.order_id);
         console.error('Walled checkout session failed:', {
           status: response.status,
           detail: providerDetail || 'No error details returned',
@@ -255,7 +260,7 @@ export function registerWalledRoutes(app, { getVideoForCheckout, getAllVideosFor
         checkoutUrl = new URL(result.checkoutUrl);
         if (checkoutUrl.origin !== new URL(c.checkoutOrigin).origin || checkoutUrl.username || checkoutUrl.password) throw new Error();
       } catch { return sendError(502, 'Walled returned an unexpected checkout address.'); }
-      const checkoutMode = result.checkoutMode || (payload.checkoutMode === 'embedded' ? '' : 'redirect');
+      const checkoutMode = result.checkoutMode;
       if (!['embedded', 'redirect'].includes(checkoutMode)) return sendError(502, 'Walled did not confirm how this checkout must open.');
       if (result.orderId !== order.order_id || result.productId !== selectedProduct.productId
         || result.customerRef && result.customerRef !== order.order_id
@@ -287,7 +292,7 @@ export function registerWalledRoutes(app, { getVideoForCheckout, getAllVideosFor
   };
 
   app.post('/api/walled-checkout', startCheckout);
-  app.get(['/checkout', '/api/walled-checkout'], reviewCheckout);
+  app.get(['/checkout', '/checkout/review', '/api/walled-checkout'], reviewCheckout);
 
   app.get('/payment/success', (req, res) => {
     res.set('Cache-Control', 'no-store, private');
@@ -320,7 +325,7 @@ export function registerWalledRoutes(app, { getVideoForCheckout, getAllVideosFor
           if (order.video_id) params.set('video_id', order.video_id);
           else if (order.bundle) params.set('bundle', 'true');
           else params.set('product_name', order.title);
-          return res.redirect(303, '/checkout?' + params);
+          return res.redirect(303, (order.video_id || order.bundle ? '/checkout/review?' : '/checkout?') + params);
         }
       }
     } catch { /* Cancellation is navigation only; do not modify the order. */ }

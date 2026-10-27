@@ -6,6 +6,7 @@ import vm from 'node:vm';
 import express from 'express';
 import { registerWalledRoutes } from '../walled-checkout.js';
 import { createPurchaseRecorder } from '../purchases.js';
+import { walledErrorDetails } from '../walled-errors.js';
 
 async function withCheckoutServer(options, run) {
   const env = {
@@ -111,16 +112,30 @@ async function withCheckoutServer(options, run) {
   }
 }
 
-test('Secure landing page shows only the selected order, payment name and button; no session is created by navigation', async () => {
+test('main-store landing page shows the selected order, payment name and button without auto-start', async () => {
   await withCheckoutServer({}, async h => {
-    const review = await h.review('product_name=Digital%20Product%20Launch%20Blueprint&amount=0.01&display_title=Fake');
+    const review = await h.review('video_id=registered-video&amount=0.01&display_title=Fake');
     assert.equal(review.response.status, 200);
     assert.match(review.html, /\$90\.00/);
     assert.match(review.html, /Product name in the payment form/);
     assert.match(review.html, /id="pay-button"/);
+    assert.match(review.html, /Pay with confidence/);
+    assert.equal(review.data.autoStart,false);
     assert.doesNotMatch(review.html, /Best Sellers|class="catalog"|mock-test-key|mock-signing-secret|Fake/);
     assert.equal(h.calls.creates.length, 0);
     assert.equal(h.tables.walled_orders.length, 0);
+  });
+});
+
+test('Secure catalog purchases start payment directly without the confidence screen or an extra Pay step', async () => {
+  await withCheckoutServer({},async h=>{
+    const payment=await h.review();
+    assert.equal(payment.response.status,200);
+    assert.equal(payment.data.autoStart,true);
+    assert.match(payment.html,/Complete your payment/);
+    assert.match(payment.html,/id="pay-button" type="button" hidden/);
+    assert.doesNotMatch(payment.html,/Pay with confidence|One more step|Ready to continue|Product name in the payment form/);
+    assert.equal(h.calls.creates.length,0);
   });
 });
 
@@ -135,13 +150,45 @@ test('payment API uses server prices and titles and returns the confirmed embedd
     const payload = h.calls.creates[0].payload;
     assert.equal(payload.productId, 'ebook-90');
     assert.equal(payload.metadata.title, 'Digital Product Launch Blueprint');
-    assert.equal(payload.checkoutMode, 'embedded');
+    assert.equal(payload.checkoutMode, undefined);
     assert.equal(payload.domainMode, 'strict');
     assert.equal(payload.amount, undefined);
     assert.equal(payload.successUrl, 'https://secure.test/payment/success');
     assert.notEqual(payload.orderId, 'untrusted');
     assert.equal(h.tables.walled_orders[0].amount_minor, 9000);
   });
+});
+
+test('session requests follow the published gateway schema and omit response-only checkoutMode', async () => {
+  // CreateGatewayCheckoutIn in https://api.trywalled.com/openapi.json (2026-10-27).
+  const allowed=new Set(['provider','domainMode','productId','orderId','customerRef','customerEmail','currency','successUrl','cancelUrl','amount','metadata']);
+  await withCheckoutServer({},async h=>{
+    assert.equal((await h.post(await h.review())).status,200);
+    assert.ok(Object.keys(h.calls.creates[0].payload).every(field=>allowed.has(field)));
+  });
+});
+
+test('old schema-rejected requests are repaired without changing their order or product IDs',async()=>{
+  await withCheckoutServer({},async h=>{
+    const review=await h.review();
+    const orderId=crypto.randomUUID();
+    h.tables.walled_orders.push({order_id:orderId,request_key:review.data.requestKey,video_id:null,bundle:false,title:'Digital Product Launch Blueprint',amount_minor:9000,currency:'usd',product_id:'ebook-90',status:'checkout_error',last_error:'HTTP 422',metadata:{
+      owner_hash:crypto.createHash('sha256').update(review.cookie.split('=')[1]).digest('hex'),
+      checkout_request:{productId:'ebook-90',orderId,customerRef:orderId,successUrl:'https://secure.test/payment/success',cancelUrl:'https://secure.test/payment/cancel',checkoutMode:'embedded',metadata:{title:'Digital Product Launch Blueprint'}},
+    }});
+    assert.equal((await h.post(review)).status,200);
+    assert.equal(h.calls.creates[0].payload.checkoutMode,undefined);
+    assert.equal(h.calls.creates[0].payload.orderId,orderId);
+    assert.equal(h.calls.creates[0].payload.productId,'ebook-90');
+    assert.equal(h.tables.walled_orders.length,1);
+  });
+});
+
+test('structured validation errors identify the rejected field without logging input values or secrets',()=>{
+  const detail=walledErrorDetails({detail:[{loc:['body','CreateGatewayCheckoutIn','checkoutMode'],msg:'Extra inputs are not permitted',type:'extra_forbidden',input:'PRIVATE_BUYER_DATA'}],message:'mock-secret'},['mock-secret']);
+  assert.match(detail,/checkoutMode: Extra inputs are not permitted/);
+  assert.doesNotMatch(detail,/PRIVATE_BUYER_DATA|mock-secret/);
+  assert.match(detail,/\[redacted\]/);
 });
 
 test('anonymous checkout requires its own cookie and a same-origin request', async () => {
@@ -200,7 +247,7 @@ test('cancellation returns to the same Secure order without creating or failing 
   });
 });
 
-function checkoutBrowser(mode = 'embedded') {
+function checkoutBrowser(mode = 'embedded', autoStart = false) {
   const handlers = {};
   const requests = [];
   const navigations = [];
@@ -208,8 +255,8 @@ function checkoutBrowser(mode = 'embedded') {
   let paid = false;
   let mountOptions;
   const elements = {
-    'checkout-data': { textContent: JSON.stringify({input:{product_name:'Digital Product Launch Blueprint'},requestKey:crypto.randomUUID()}) },
-    'pay-button': { addEventListener(name, fn) { handlers[name] = fn; } },
+    'checkout-data': { textContent: JSON.stringify({input:{product_name:'Digital Product Launch Blueprint'},requestKey:crypto.randomUUID(),autoStart}) },
+    'pay-button': { hidden:autoStart, addEventListener(name, fn) { handlers[name] = fn; } },
     'checkout-status': {},
   };
   const browser = {
@@ -255,6 +302,16 @@ test('browser follows an explicit legacy redirect without mounting the SDK', asy
   await browser.handlers.click();
   assert.deepEqual(browser.navigations,['https://checkout.walled.test/session/demo']);
   assert.equal(browser.scripts.length,0);
+});
+
+test('direct Secure checkout automatically mounts the SDK exactly once without another click', async () => {
+  const browser=checkoutBrowser('embedded',true);
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(browser.requests.length,1);
+  assert.ok(browser.mount);
+  assert.equal(browser.elements['pay-button'].hidden,true);
+  await browser.handlers.click();
+  assert.equal(browser.requests.length,1);
 });
 
 test('unexpected checkout origins are rejected before the browser can load their SDK', async () => {

@@ -41,7 +41,7 @@
     });
   }
 
-  button.addEventListener('click', async function () {
+  async function startPayment() {
     if (pending || mounted) return;
     pending = true;
     button.disabled = true;
@@ -75,8 +75,11 @@
       button.hidden = true;
     } catch (error) {
       status.textContent = error.message || 'Payment could not be started. Please try again.';
+      button.hidden = false;
       button.disabled = false;
     } finally { pending = false; }
-  });
+  }
+  button.addEventListener('click', startPayment);
+  if (data.autoStart) startPayment();
   window.addEventListener('pagehide', function () { if (mounted && typeof mounted.destroy === 'function') mounted.destroy(); });
 })();

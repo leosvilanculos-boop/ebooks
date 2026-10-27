@@ -22,9 +22,12 @@ export function ownsCheckout(order, owner) {
 
 const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 
-export function renderCheckoutPage(purchase, input, requestKey, cancelled = false) {
-  const data = JSON.stringify({ input, requestKey }).replace(/</g, '\\u003c');
+export function renderCheckoutPage(purchase, input, requestKey, cancelled = false, review = true) {
+  const data = JSON.stringify({ input, requestKey, autoStart: !review }).replace(/</g, '\\u003c');
   const label = purchase.checkoutName;
+  const price = escape(new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(purchase.amount));
+  if (!review) return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="referrer" content="no-referrer"><title>Secure payment</title><link rel="stylesheet" href="/css/checkout.css"></head>
+<body class="checkout-direct"><header><span class="brand">Secure</span><span class="header-note">Protected payment</span></header><main><section class="payment" aria-label="Payment"><span class="section-label">SECURE PAYMENT</span><h1>Complete your payment</h1><div class="direct-order"><h2>${escape(purchase.title)}</h2><strong>${price}</strong></div><p>Your payment form opens automatically below.</p><button id="pay-button" type="button" hidden>Try again</button><p id="checkout-status" role="status" aria-live="polite">Preparing your secure payment…</p><div id="walled-checkout"></div><p class="payment-footnote">Access is provided after payment confirmation.</p></section></main><footer>Secure payment powered by Walled</footer><script id="checkout-data" type="application/json">${data}</script><script src="/js/checkout.js" defer></script></body></html>`;
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="referrer" content="no-referrer"><title>Secure payment</title><link rel="stylesheet" href="/css/checkout.css"></head>
 <body><header><span class="brand">Secure</span><span class="header-note">Protected payment</span></header>
 <main><section class="intro"><p class="eyebrow">COMPLETE YOUR PURCHASE</p><h1>One more step.<br><span>Pay with confidence.</span></h1><p>Review your purchase, then continue to the secure payment form below.</p></section>

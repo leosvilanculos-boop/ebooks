@@ -120,12 +120,13 @@
   ],
   "productIdsUpdated": true,
   "appOrigin": "https://ebooks-repo.up.railway.app",
-  "checkoutFlow": "Main store → Secure /checkout order summary → Pay button → Walled SDK for embedded sessions. No automatic catalog navigation.",
+  "checkoutFlow": "Main store → Secure /checkout/review → Pay button → Walled integration. Secure catalog → /checkout → automatic Walled integration without the confidence screen.",
   "strictMigration": {
     "codePrepared": true,
     "hostedDevelopmentPaymentVerified": false,
     "signedHostedConfirmationVerified": false,
     "activationRequiresWalledAndMerchantConfirmation": true
   },
-  "mainStoreGatewayConfiguration": "Separate matching gateways required; known ebook product UUIDs are rejected for video purchases."
+  "mainStoreGatewayConfiguration": "Separate matching gateways required; known ebook product UUIDs are rejected for video purchases.",
+  "apiCompatibility": "CreateGatewayCheckoutIn forbids checkoutMode in request bodies; mode is read from the response. Previously schema-rejected HTTP 422 requests can retain their existing order and product IDs."
 }
