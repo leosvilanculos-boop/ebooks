@@ -3,539 +3,260 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{SITE_NAME}} — Premium Digital Ebooks</title>
+  <title>{{SITE_NAME}} · Premium Digital Ebooks</title>
+  <meta name="description" content="Premium digital ebooks on business, money, mindset and health. Secure checkout and instant access after payment.">
+  <meta name="theme-color" content="#08090c">
+  <link rel="icon" type="image/png" href="/images/favicon.png">
+  <link rel="apple-touch-icon" href="/images/logo-mark.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:ital,opsz,wght@0,9..144,500;1,9..144,500&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
-      --primary: #00aff0;
-      --primary-hover: #0095d4;
-      --bg: #0a0a0c;
-      --surface: #141418;
-      --surface2: #1c1c22;
-      --border: rgba(255, 255, 255, 0.08);
-      --border-hover: rgba(255, 255, 255, 0.14);
-      --text: #f4f4f5;
-      --muted: #9ca3af;
-      --accent: #00aff0;
-      --accent2: #00aff0;
-      --paypal: #00aff0;
-      --gold: #fbbf24;
-      --danger: #f87171;
-      --success: #34d399;
-      --primary-soft: rgba(0, 175, 240, 0.12);
-      --primary-border: rgba(0, 175, 240, 0.28);
-      --success-bg: rgba(52, 211, 153, 0.1);
-      --success-border: rgba(52, 211, 153, 0.35);
-      --success-text: #6ee7b7;
+      --primary: #2ab4f0;
+      --primary-hover: #52c4f5;
+      --primary-ink: #04121a;
+      --bg: #08090c;
+      --surface: #111318;
+      --surface2: #171a21;
+      --border: rgba(255, 255, 255, 0.07);
+      --border-hover: rgba(255, 255, 255, 0.16);
+      --text: #f2f3f5;
+      --muted: #969cab;
+      --faint: #6b7180;
+      --gold: #e8b64c;
+      --success: #4ccf9a;
+      --primary-soft: rgba(42, 180, 240, 0.1);
+      --primary-border: rgba(42, 180, 240, 0.26);
+      --success-bg: rgba(76, 207, 154, 0.1);
+      --success-border: rgba(76, 207, 154, 0.35);
+      --success-text: #7de3b7;
       --err-bg: rgba(248, 113, 113, 0.1);
       --err-border: rgba(248, 113, 113, 0.35);
       --err-text: #fca5a5;
+      --serif: 'Fraunces', Georgia, 'Times New Roman', serif;
+      --radius: 14px;
     }
 
-    html { color-scheme: dark; }
+    html { color-scheme: dark; scroll-behavior: smooth; }
     body {
-      font-family: 'DM Sans', system-ui, sans-serif;
+      font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
       background: var(--bg);
-      background-image: radial-gradient(ellipse 70% 45% at 50% -15%, rgba(0, 175, 240, 0.07), transparent);
       color: var(--text);
       min-height: 100vh;
       line-height: 1.6;
       -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
     }
+    a { color: inherit; }
+    :focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; border-radius: 6px; }
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 0 1.5rem; }
 
     /* ─── NAV ─── */
     nav {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: rgba(10, 10, 12, 0.92);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(8, 9, 12, 0.82);
+      backdrop-filter: saturate(160%) blur(14px);
+      -webkit-backdrop-filter: saturate(160%) blur(14px);
       border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.85rem 2rem;
     }
-    .nav-logo {
-      font-size: 1.15rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      color: var(--text);
-    }
-    .nav-badge {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-size: 0.78rem;
-      color: var(--muted);
-      background: var(--surface);
-      border: 1px solid var(--border);
-      padding: 0.3rem 0.7rem;
-      border-radius: 8px;
-    }
-    .nav-badge span { color: var(--primary); font-weight: 600; }
+    .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+    .nav-logo { display: flex; align-items: center; gap: 0.6rem; font-size: 1.05rem; font-weight: 700; letter-spacing: -0.02em; text-decoration: none; }
+    .nav-mark { width: 36px; height: auto; display: block; filter: drop-shadow(0 0 10px rgba(42, 160, 255, 0.35)); }
+    .nav-links { display: flex; align-items: center; gap: 0.35rem; }
+    .nav-links a { font-size: 0.86rem; color: var(--muted); text-decoration: none; padding: 0.45rem 0.8rem; border-radius: 8px; transition: color .15s, background .15s; }
+    .nav-links a:hover { color: var(--text); background: var(--surface2); }
+    .nav-links a.nav-cta { color: var(--text); border: 1px solid var(--border-hover); }
 
     /* ─── HERO ─── */
-    .hero {
-      text-align: center;
-      padding: 4rem 1.5rem 2.5rem;
-      max-width: 700px;
-      margin: 0 auto;
+    .hero { position: relative; text-align: center; padding: 5rem 1.5rem 3.25rem; overflow: hidden; }
+    .hero::before {
+      content: ""; position: absolute; inset: -40% 0 auto; height: 520px; pointer-events: none;
+      background: radial-gradient(closest-side, rgba(42, 180, 240, 0.13), transparent);
     }
+    .hero > * { position: relative; }
     .hero-tag {
-      display: inline-block;
-      font-size: 0.72rem;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--primary);
-      background: var(--primary-soft);
-      border: 1px solid var(--primary-border);
-      padding: 0.3rem 0.75rem;
-      border-radius: 6px;
-      margin-bottom: 1.15rem;
+      display: inline-flex; align-items: center; gap: 0.45rem;
+      font-size: 0.74rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--muted); border: 1px solid var(--border-hover); border-radius: 999px;
+      padding: 0.35rem 0.85rem; margin-bottom: 1.4rem;
     }
+    .hero-tag i { width: 6px; height: 6px; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 4px rgba(76, 207, 154, 0.15); }
     .hero h1 {
-      font-size: clamp(1.85rem, 4.5vw, 2.6rem);
-      font-weight: 700;
-      letter-spacing: -0.03em;
-      line-height: 1.15;
-      margin-bottom: 0.9rem;
+      font-family: var(--serif); font-weight: 500;
+      font-size: clamp(2.2rem, 5.6vw, 3.6rem); line-height: 1.06; letter-spacing: -0.025em;
+      max-width: 760px; margin: 0 auto 1.1rem;
     }
-    .hero h1 em { font-style: normal; color: var(--primary); }
-    .hero p {
-      font-size: 1rem;
-      color: var(--muted);
-      max-width: 520px;
-      margin: 0 auto 1.5rem;
-    }
-    .trust-row {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 1rem;
-      font-size: 0.82rem;
-      color: var(--muted);
-    }
-    .trust-item {
-      display: flex;
-      align-items: center;
-      gap: 0.35rem;
-    }
-    .trust-item svg { width: 15px; height: 15px; fill: var(--success); }
-    .checkout-note {
-      margin-top: 1rem;
-      font-size: 0.78rem;
-      color: var(--muted);
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 0.4rem 0.9rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-    }
+    .hero h1 em { font-style: italic; color: var(--primary); background: linear-gradient(100deg, #45dcff, #2a7dff); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; padding-right: 0.06em; }
+    .hero p.lead { font-size: 1.06rem; color: var(--muted); max-width: 540px; margin: 0 auto 2rem; }
+    .hero-actions { display: flex; gap: 0.7rem; justify-content: center; flex-wrap: wrap; margin-bottom: 2.25rem; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; min-height: 46px; padding: 0 1.35rem; border-radius: 10px; font-family: inherit; font-size: 0.92rem; font-weight: 600; line-height: 1.2; white-space: nowrap; text-decoration: none; cursor: pointer; transition: background .15s, border-color .15s, transform .15s; }
+    .btn-primary { background: var(--primary); color: var(--primary-ink); border: 1px solid var(--primary); }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--border-hover); }
+    .btn-ghost:hover { background: var(--surface2); }
+    .trust-row { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0.5rem 1.6rem; font-size: 0.82rem; color: var(--muted); }
+    .trust-item { display: flex; align-items: center; gap: 0.45rem; }
+    .trust-item svg { width: 16px; height: 16px; fill: none; stroke: var(--success); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
-    /* ─── PROMO BANNER ─── */
+    /* ─── STATUS BANNER ─── */
+    #status-banner { max-width: 1180px; margin: 0 auto 1rem; padding: 0 1.5rem; display: none; }
+    .banner-inner { padding: 0.9rem 1.1rem; border-radius: 10px; font-size: 0.9rem; display: flex; align-items: flex-start; gap: 0.75rem; }
+    .banner-inner.success { background: var(--success-bg); border: 1px solid var(--success-border); color: var(--success-text); }
+    .banner-inner.error { background: var(--err-bg); border: 1px solid var(--err-border); color: var(--err-text); }
+
+    /* ─── CATALOG ─── */
+    .catalog { max-width: 1180px; margin: 0 auto 4rem; padding: 0 1.5rem; scroll-margin-top: 80px; }
+
+    /* Promo */
     .promo-banner {
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.25rem 1.35rem;
-      margin-bottom: 1.75rem;
-      background: linear-gradient(135deg, rgba(0, 175, 240, 0.08) 0%, var(--surface) 55%);
+      display: grid; grid-template-columns: 1fr auto; gap: 1.5rem 2.5rem; align-items: center;
+      border: 1px solid var(--primary-border); border-radius: 18px;
+      padding: 2rem 2.25rem; margin-bottom: 3.5rem;
+      background:
+        radial-gradient(120% 140% at 0% 0%, rgba(42, 180, 240, 0.14), transparent 55%),
+        var(--surface);
     }
-    .promo-banner::before { display: none; }
-    .promo-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      font-size: 0.65rem;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--primary);
-      margin-bottom: 0.45rem;
-    }
-    .promo-title {
-      font-size: clamp(1.1rem, 3vw, 1.35rem);
-      font-weight: 700;
-      margin-bottom: 0.3rem;
-      letter-spacing: -0.02em;
-    }
-    .promo-sub {
-      font-size: 0.88rem;
-      color: var(--muted);
-      margin-bottom: 0.55rem;
-    }
-    .promo-hint {
-      font-size: 0.76rem;
-      line-height: 1.5;
-      color: var(--muted);
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 0.6rem 0.75rem;
-      margin-bottom: 0.85rem;
-    }
-    .promo-foot {
-      font-size: 0.7rem;
-      color: var(--muted);
-      margin-top: 0.75rem;
-      line-height: 1.5;
-    }
-    .promo-foot strong { color: var(--text); font-weight: 700; }
-    .promo-actions { display: flex; gap: 0.55rem; flex-wrap: wrap; align-items: center; }
-    .promo-btn {
-      border-radius: 8px;
-      padding: 0.65rem 1.15rem;
-      font-size: 0.85rem;
-      font-weight: 600;
-      text-decoration: none;
-      border: 1px solid var(--border);
-      color: var(--text);
-      background: var(--bg);
-      cursor: pointer;
-      transition: border-color 0.15s, background 0.15s;
-      font-family: inherit;
-    }
+    .promo-badge { display: inline-block; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--primary); margin-bottom: 0.6rem; }
+    .promo-title { font-family: var(--serif); font-weight: 500; font-size: clamp(1.5rem, 3.4vw, 2rem); letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 0.5rem; }
+    .promo-sub { font-size: 0.95rem; color: var(--muted); margin-bottom: 0.9rem; }
+    .promo-list { list-style: none; display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem; font-size: 0.84rem; color: var(--text); }
+    .promo-list li { display: flex; align-items: center; gap: 0.4rem; }
+    .promo-list svg { width: 15px; height: 15px; fill: none; stroke: var(--success); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+    .promo-side { min-width: 260px; background: rgba(8, 9, 12, 0.55); border: 1px solid var(--border); border-radius: 14px; padding: 1.25rem; }
+    .promo-price-tag { display: flex; align-items: baseline; gap: 0.55rem; margin-bottom: 0.9rem; }
+    .promo-price-tag .now { font-size: 2.1rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
+    .promo-price-tag .was { font-size: 0.95rem; color: var(--faint); text-decoration: line-through; }
+    .promo-price-tag .save { margin-left: auto; font-size: 0.72rem; font-weight: 700; color: var(--success); background: var(--success-bg); border-radius: 999px; padding: 0.2rem 0.55rem; }
+    .promo-actions { display: grid; gap: 0.5rem; }
+    .promo-btn { display: flex; align-items: center; justify-content: center; min-height: 46px; border-radius: 10px; font-family: inherit; font-size: 0.9rem; font-weight: 600; text-decoration: none; border: 1px solid var(--border-hover); color: var(--text); background: transparent; cursor: pointer; transition: background .15s, border-color .15s; }
     .promo-btn:hover { background: var(--surface2); }
-    .promo-btn.primary {
-      background: var(--primary);
-      border-color: var(--primary);
-      color: #fff;
-      box-shadow: none;
-    }
-    .promo-btn.primary:hover {
-      background: var(--primary-hover);
-      border-color: var(--primary-hover);
-      transform: none;
-    }
-    .promo-price-tag {
-      display: inline-flex;
-      align-items: baseline;
-      gap: 0.45rem;
-      margin-right: 0.25rem;
-    }
-    .promo-price-tag .was {
-      font-size: 0.82rem;
-      color: var(--muted);
-      text-decoration: line-through;
-    }
-    .promo-price-tag .now {
-      font-size: 1.35rem;
-      font-weight: 700;
-      color: var(--primary);
-    }
+    .promo-btn.primary { background: var(--primary); border-color: var(--primary); color: var(--primary-ink); font-weight: 700; }
+    .promo-btn.primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
+    .promo-foot { font-size: 0.74rem; color: var(--faint); margin-top: 0.8rem; text-align: center; }
 
-    /* ─── SUCCESS BANNER ─── */
-    #status-banner {
-      max-width: 1200px;
-      margin: 1.5rem auto 0;
-      padding: 0 1.5rem;
-      display: none;
-    }
-    .banner-inner {
-      padding: 1rem 1.25rem;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      display: flex;
-      align-items: flex-start;
-      gap: 0.75rem;
-    }
-    .banner-inner.success {
-      background: var(--success-bg);
-      border: 1px solid var(--success-border);
-      color: var(--success-text);
-    }
-    .banner-inner.error {
-      background: var(--err-bg);
-      border: 1px solid var(--err-border);
-      color: var(--err-text);
-    }
-
-    /* ─── GRID ─── */
-    .catalog {
-      max-width: 1200px;
-      margin: 2.5rem auto;
-      padding: 0 1.5rem;
-    }
-    .catalog-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 1.5rem;
-    }
-    .catalog-header h2 { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; }
+    .catalog-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+    .catalog-header h2 { font-family: var(--serif); font-weight: 500; font-size: 1.85rem; letter-spacing: -0.02em; line-height: 1.1; }
     .catalog-header span { font-size: 0.85rem; color: var(--muted); }
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-      gap: 1.25rem;
-    }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.75rem 1.4rem; }
 
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      overflow: hidden;
-      transition: border-color 0.2s, box-shadow 0.2s;
-      display: flex;
-      flex-direction: column;
-    }
-    .card:hover {
-      transform: none;
-      border-color: var(--border-hover);
-      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
-    }
-
+    .card { display: flex; flex-direction: column; background: transparent; border-radius: var(--radius); }
     .card-cover {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 2/3;
-      overflow: hidden;
-      background: var(--surface);
+      position: relative; aspect-ratio: 2/3; overflow: hidden; border-radius: var(--radius);
+      background: linear-gradient(160deg, var(--surface2), var(--surface));
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 14px 30px -18px rgba(0, 0, 0, 0.9);
+      transition: transform .25s ease, box-shadow .25s ease, border-color .25s;
     }
-    .card-cover img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-      transition: transform 0.3s ease;
-    }
-    .card:hover .card-cover img { transform: scale(1.03); }
+    .card:hover .card-cover { transform: translateY(-3px); border-color: var(--border-hover); box-shadow: 0 22px 40px -20px rgba(0, 0, 0, 0.95); }
+    .card-cover img { color: transparent; font-size: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
     .card-cover-badge {
-      position: absolute;
-      top: 0.6rem;
-      left: 0.6rem;
-      background: var(--primary);
-      color: #fff;
-      font-size: 0.65rem;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      padding: 0.2rem 0.5rem;
-      border-radius: 6px;
+      position: absolute; top: 0.7rem; left: 0.7rem;
+      background: rgba(8, 9, 12, 0.78); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+      color: var(--text); border: 1px solid rgba(255,255,255,0.12);
+      font-size: 0.64rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+      padding: 0.25rem 0.55rem; border-radius: 999px;
     }
-    .card-cover-badge.new { background: var(--primary); color: #fff; }
+    .card-cover-badge.new { color: var(--primary); }
 
-    .card-body {
-      padding: 1rem;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-    .card-category {
-      font-size: 0.68rem;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--primary);
-      margin-bottom: 0.35rem;
-    }
-    .card-title {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: var(--text);
-      line-height: 1.3;
-      margin-bottom: 0.4rem;
-    }
-    .card-author {
-      font-size: 0.75rem;
-      color: var(--muted);
-      margin-bottom: 0.5rem;
-    }
-    .stars {
-      display: flex;
-      align-items: center;
-      gap: 0.2rem;
-      font-size: 0.72rem;
-      margin-bottom: 0.6rem;
-    }
-    .stars .s { color: var(--gold); }
-    .stars .count { color: var(--muted); margin-left: 0.25rem; }
+    .card-body { padding: 0.95rem 0.15rem 0; flex: 1; display: flex; flex-direction: column; }
+    .card-category { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: var(--faint); margin-bottom: 0.3rem; }
+    .card-title { font-size: 1.02rem; font-weight: 700; line-height: 1.3; letter-spacing: -0.01em; margin-bottom: 0.2rem; }
+    .card-author { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.45rem; }
+    .stars { display: flex; align-items: center; gap: 0.3rem; font-size: 0.74rem; margin-bottom: 0.5rem; }
+    .stars .s { color: var(--gold); letter-spacing: 0.05em; }
+    .stars .count { color: var(--faint); }
     .card-desc {
-      font-size: 0.78rem;
-      color: var(--muted);
-      line-height: 1.5;
-      margin-bottom: 0.9rem;
-      flex: 1;
+      font-size: 0.82rem; color: var(--muted); line-height: 1.55; margin-bottom: 0.9rem;
+      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
     }
-
-    .card-footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 0.8rem;
-    }
-    .price { font-size: 1.15rem; font-weight: 700; color: var(--primary); }
-    .price-old { font-size: 0.8rem; color: var(--muted); text-decoration: line-through; margin-left: 0.3rem; font-weight: 400; }
-    .format-badge {
-      font-size: 0.65rem;
-      font-weight: 600;
-      background: var(--primary-soft);
-      border: 1px solid var(--primary-border);
-      color: var(--primary);
-      padding: 0.15rem 0.45rem;
-      border-radius: 4px;
-    }
+    .card-footer { margin-top: auto; display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+    .price { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.02em; color: var(--text); }
+    .price-old { font-size: 0.82rem; color: var(--faint); text-decoration: line-through; margin-left: 0.4rem; }
+    .format-badge { font-size: 0.66rem; font-weight: 600; color: var(--muted); border: 1px solid var(--border-hover); padding: 0.15rem 0.5rem; border-radius: 999px; }
 
     .btn-pay {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      padding: 0.65rem 1rem;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      font-family: inherit;
-      font-size: 0.88rem;
-      font-weight: 700;
-      background: var(--primary);
-      color: #fff;
-      transition: background 0.15s;
-      box-shadow: none;
+      width: 100%; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+      padding: 0 1rem; border-radius: 10px; border: 1px solid var(--primary); cursor: pointer;
+      font-family: inherit; font-size: 0.9rem; font-weight: 700;
+      background: var(--primary); color: var(--primary-ink); transition: background .15s;
     }
-    .btn-pay:hover {
-      transform: none;
-      background: var(--primary-hover);
-      box-shadow: none;
-      opacity: 1;
-    }
-    .btn-pay:active { transform: none; }
-    .btn-pay .pp-logo { font-weight: 800; }
-    .btn-pay .pp-logo span { color: #ffd166; }
-    .btn-support {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      min-height: 44px;
-      margin-top: 0.5rem;
-      padding: 0.6rem 1rem;
-      border: 1px solid var(--primary-border);
-      border-radius: 8px;
-      background: var(--primary-soft);
-      color: var(--primary);
-      font-size: 0.85rem;
-      font-weight: 600;
-      text-decoration: none;
-      transition: background 0.15s, border-color 0.15s;
-    }
-    .btn-support:hover {
-      background: var(--surface2);
-      border-color: var(--primary);
-    }
-    .btn-support:focus-visible {
-      outline: 2px solid var(--primary);
-      outline-offset: 3px;
-    }
-    .checkout-sub {
-      margin-top: 0.5rem;
-      font-size: 0.7rem;
-      color: var(--muted);
-      text-align: center;
-    }
+    .btn-pay:hover { background: var(--primary-hover); }
+    .btn-support { display: block; text-align: center; margin-top: 0.55rem; font-size: 0.8rem; color: var(--muted); text-decoration: none; }
+    .btn-support:hover { color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
+    .checkout-sub { display: none; }
 
-    /* ─── TRUST SECTION ─── */
-    .trust-section {
-      max-width: 1200px;
-      margin: 1rem auto 3rem;
-      padding: 0 1.5rem;
-    }
-    .trust-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-    }
-    .trust-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 1.15rem;
-      display: flex;
-      align-items: flex-start;
-      gap: 0.75rem;
-    }
-    .trust-icon { font-size: 1.5rem; flex-shrink: 0; }
-    .trust-text h4 { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.2rem; }
-    .trust-text p { font-size: 0.78rem; color: var(--muted); line-height: 1.4; }
+    /* ─── TRUST ─── */
+    .trust-section { border-top: 1px solid var(--border); background: linear-gradient(180deg, var(--surface) 0%, var(--bg) 100%); }
+    .trust-grid { max-width: 1180px; margin: 0 auto; padding: 3rem 1.5rem; display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; }
+    .trust-card { display: flex; flex-direction: column; gap: 0.8rem; }
+    .trust-icon { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; background: var(--primary-soft); border: 1px solid var(--primary-border); color: var(--primary); }
+    .trust-icon svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .trust-text h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.25rem; }
+    .trust-text p { font-size: 0.84rem; color: var(--muted); line-height: 1.55; }
+    .trust-text a { color: var(--primary); text-decoration: none; }
+    .trust-text a:hover { text-decoration: underline; }
 
     /* ─── SUCCESS PAGE ─── */
-    #success-page {
-      display: none;
-      min-height: 100vh;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem;
-      background: var(--bg);
-    }
+    #success-page { display: none; min-height: calc(100vh - 64px); align-items: center; justify-content: center; padding: 2rem 1.25rem; }
     #success-page.active { display: flex; }
-    .success-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 2.5rem 2rem;
-      text-align: center;
-      max-width: 480px;
-      width: 100%;
-      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
-    }
-    .success-icon { font-size: 3rem; margin-bottom: 1rem; }
-    .success-card h2 { font-size: 1.45rem; font-weight: 700; margin-bottom: 0.65rem; }
-    .success-card p { color: var(--muted); margin-bottom: 1.35rem; line-height: 1.6; }
-    .success-spinner {
-      width: 40px; height: 40px; margin: 0 auto 1.15rem;
-      border: 3px solid var(--primary-border);
-      border-top-color: var(--primary);
-      border-radius: 50%;
-      animation: success-spin 0.85s linear infinite;
-    }
+    .success-card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 2.5rem 2rem; text-align: center; max-width: 460px; width: 100%; box-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.9); }
+    .success-logo { display: block; width: 120px; height: auto; margin: 0 auto 1.5rem; }
+    .success-icon { width: 56px; height: 56px; margin: 0 auto 1.1rem; border-radius: 50%; display: grid; place-items: center; background: var(--success-bg); border: 1px solid var(--success-border); color: var(--success); }
+    .success-icon svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+    .success-card h2 { font-family: var(--serif); font-weight: 500; font-size: 1.7rem; letter-spacing: -0.02em; margin-bottom: 0.6rem; }
+    .success-card p { color: var(--muted); margin-bottom: 1.35rem; line-height: 1.6; font-size: 0.95rem; }
+    .success-spinner { width: 34px; height: 34px; margin: 0 auto 1.2rem; border: 3px solid var(--primary-border); border-top-color: var(--primary); border-radius: 50%; animation: success-spin 0.85s linear infinite; }
     @keyframes success-spin { to { transform: rotate(360deg); } }
-    .btn-access {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.6rem;
-      width: 100%;
-      padding: 0.85rem 1.5rem;
-      border-radius: 8px;
-      background: var(--primary);
-      color: #fff;
-      font-size: 1rem;
-      font-weight: 700;
-      text-decoration: none;
-      transition: background 0.15s;
-      box-shadow: none;
-    }
-    .btn-access:hover { background: var(--primary-hover); transform: none; box-shadow: none; }
-    .success-note { font-size: 0.78rem; color: var(--muted); margin-top: 1.15rem; }
+    .btn-access { display: inline-flex; align-items: center; justify-content: center; gap: 0.55rem; width: 100%; min-height: 48px; border-radius: 10px; background: var(--primary); color: var(--primary-ink); font-size: 0.98rem; font-weight: 700; text-decoration: none; transition: background .15s; }
+    .btn-access:hover { background: var(--primary-hover); }
+    .success-note { font-size: 0.78rem; color: var(--faint); margin: 1rem 0 0 !important; }
 
     /* ─── FOOTER ─── */
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 2rem 1.5rem;
-      text-align: center;
-      color: var(--muted);
-      font-size: 0.8rem;
-      line-height: 1.8;
-    }
-    footer .legal-links { margin-top: 0.75rem; font-size: 0.78rem; }
-    footer .legal-links a { color: var(--primary); text-decoration: none; }
-    footer .legal-links a:hover { text-decoration: underline; }
+    footer { border-top: 1px solid var(--border); }
+    .footer-inner { max-width: 1180px; margin: 0 auto; padding: 2rem 1.5rem 2.5rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem 2rem; font-size: 0.82rem; color: var(--faint); }
+    .footer-brand { display: flex; align-items: center; gap: 0.6rem; }
+    .footer-brand img { width: 26px; height: auto; opacity: 0.85; }
+    .footer-links { display: flex; flex-wrap: wrap; gap: 0.4rem 1.4rem; }
+    .footer-links a { color: var(--muted); text-decoration: none; }
+    .footer-links a:hover { color: var(--text); }
 
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation-duration: 0s !important; scroll-behavior: auto !important; } }
+
+    @media (max-width: 900px) {
+      .trust-grid { grid-template-columns: repeat(2, 1fr); }
+      .promo-banner { grid-template-columns: 1fr; padding: 1.5rem; }
+      .promo-side { min-width: 0; }
+    }
     @media (max-width: 600px) {
-      nav { padding: 0.75rem 1rem; }
-      .hero { padding: 3rem 1rem 1.75rem; }
-      .grid { grid-template-columns: repeat(2, 1fr); gap: 0.85rem; }
-      .card-body { padding: 0.75rem; }
+      .wrap, .catalog, #status-banner { padding-left: 1rem; padding-right: 1rem; }
+      .nav-inner { height: 56px; }
+      .nav-links a:not(.nav-cta) { display: none; }
+      .hero { padding: 3rem 1rem 2.25rem; }
+      .hero p.lead { font-size: 0.98rem; margin-bottom: 1.5rem; }
+      .hero-actions { margin-bottom: 1.6rem; }
+      .hero-actions .btn { flex: 1; padding: 0 0.8rem; font-size: 0.88rem; }
+      .trust-row { gap: 0.6rem 1.1rem; font-size: 0.78rem; }
+      .promo-banner { padding: 1.25rem; margin-bottom: 2.5rem; border-radius: 16px; }
+      .promo-side { padding: 1rem; }
+      .catalog-header h2 { font-size: 1.5rem; }
+      .grid { grid-template-columns: repeat(2, 1fr); gap: 1.4rem 0.85rem; }
+      .card-body { padding-top: 0.7rem; }
+      .card-title { font-size: 0.92rem; }
+      .card-author { font-size: 0.74rem; }
+      .card-desc { font-size: 0.76rem; -webkit-line-clamp: 2; }
+      .price { font-size: 1.05rem; }
+      .price-old { font-size: 0.74rem; margin-left: 0.25rem; }
+      .format-badge { display: none; }
+      .btn-pay { min-height: 42px; font-size: 0.84rem; }
+      .btn-support { font-size: 0.74rem; }
+      .trust-grid { grid-template-columns: 1fr; gap: 1.4rem; padding: 2.25rem 1rem; }
+      .trust-card { flex-direction: row; align-items: flex-start; }
+      .trust-icon { flex-shrink: 0; }
+      .footer-inner { flex-direction: column; align-items: flex-start; padding: 1.75rem 1rem 2rem; }
     }
   </style>
 </head>
@@ -543,25 +264,32 @@
 
   <!-- NAV -->
   <nav>
-    <div class="nav-logo">{{SITE_NAME}}</div>
-    <div class="nav-badge">
-      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2a5 5 0 1 0 0 10A5 5 0 0 0 12 2zm0 12c-5.33 0-8 2.67-8 4v2h16v-2c0-1.33-2.67-4-8-4z"/></svg>
-      <span>2,400+</span> happy readers
+    <div class="wrap nav-inner">
+      <a class="nav-logo" href="/">
+        <img class="nav-mark" src="/images/logo-mark.png" alt="" width="36" height="29">
+        {{SITE_NAME}}
+      </a>
+      <div class="nav-links">
+        <a href="#catalog">Catalog</a>
+        <a href="#promo-all-content">Full library</a>
+        <a class="nav-cta" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer">Support</a>
+      </div>
     </div>
   </nav>
 
   <!-- SUCCESS PAGE (shown after payment) -->
   <div id="success-page">
     <div class="success-card">
-      <div class="success-icon">🎉</div>
+      <img class="success-logo" src="/images/logo-full.png" alt="{{SITE_NAME}}" width="140">
+      <div class="success-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
       <h2>Payment confirmed!</h2>
-      <p>Thank you for your purchase. We're unlocking your private library now — your content will open automatically in just a moment.</p>
+      <p>Thank you for your purchase. Your content will open automatically in a moment.</p>
       <div class="success-spinner" aria-hidden="true"></div>
       <a id="telegram-btn" href="#" class="btn-access" target="_blank" rel="noopener noreferrer">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
         Open my content
       </a>
-      <p class="success-note">Preparing your instant access — please keep this tab open.</p>
+      <p class="success-note">Please keep this tab open.</p>
     </div>
   </div>
 
@@ -569,29 +297,19 @@
   <div id="main-content">
     <!-- HERO -->
     <section class="hero">
-      <div class="hero-tag">✦ Instant Digital Download</div>
-      <h1>Premium Ebooks for <em>Real Results</em></h1>
-      <p>Curated digital books on business, money, mindset and productivity. Secure checkout and instant access after payment confirmation.</p>
-      <div class="trust-row">
-        <div class="trust-item">
-          <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
-          SSL Secured
-        </div>
-        <div class="trust-item">
-          <svg viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-          Instant Download
-        </div>
-        <div class="trust-item">
-          <svg viewBox="0 0 24 24"><path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-          Secure Checkout
-        </div>
-        <div class="trust-item">
-          <svg viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-          24/7 Support
-        </div>
+      <div class="hero-tag"><i aria-hidden="true"></i>Instant digital delivery</div>
+      <h1>Premium ebooks for <em>real results</em></h1>
+      <p class="lead">Practical guides on business, money, health and productivity — delivered instantly after secure checkout.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#catalog">Browse catalog</a>
+        <a class="btn btn-ghost" href="#promo-all-content">All ebooks · $100</a>
       </div>
-      <p class="checkout-note">🔐 Secure checkout processed by Walled</p>
-      <p class="legal-links"><a href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer">Telegram support: @{{TELEGRAM_USERNAME}}</a></p>
+      <div class="trust-row">
+        <div class="trust-item"><svg viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Encrypted checkout</div>
+        <div class="trust-item"><svg viewBox="0 0 24 24"><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 20h14"/></svg>Instant access</div>
+        <div class="trust-item"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.3-5.6M4 4v4h4"/></svg>30-day guarantee</div>
+        <div class="trust-item"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>Real support</div>
+      </div>
     </section>
 
     <!-- STATUS BANNER -->
@@ -600,28 +318,36 @@
     </div>
 
     <!-- CATALOG -->
-    <section class="catalog">
+    <section class="catalog" id="catalog">
       <div class="promo-banner" id="promo-all-content">
-        <div class="promo-badge">✦ VIP Offer</div>
-        <div class="promo-title">ALL EBooks Promo — $100</div>
-        <div class="promo-sub">Complete digital library · All ebooks included · Instant download after payment</div>
-        <p class="promo-hint">
-          Secure checkout through Walled. Full library access unlocks when payment is confirmed.
-        </p>
-        <div class="promo-actions">
-          <span class="promo-price-tag" aria-hidden="true">
-            <span class="was">$890</span>
-            <span class="now">$100</span>
-          </span>
-          <button type="button" class="promo-btn primary" id="promo-pay" data-method="walled">Pay Instantly — $100</button>
-          <a class="promo-btn" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer" aria-label="Support for ALL EBooks Promo on Telegram">Support</a>
+        <div class="promo-main">
+          <div class="promo-badge">Best value · Full library</div>
+          <div class="promo-title">ALL EBooks Promo</div>
+          <p class="promo-sub">Every title in the catalog, in one purchase. Access unlocks as soon as payment is confirmed.</p>
+          <ul class="promo-list">
+            <li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>All 17 ebooks</li>
+            <li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>PDF + EPUB</li>
+            <li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Instant download</li>
+            <li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Discreet billing</li>
+          </ul>
         </div>
-        <p class="promo-foot"><strong>2,400+ readers</strong> · Discreet billing · 30-day satisfaction guarantee</p>
+        <div class="promo-side">
+          <div class="promo-price-tag">
+            <span class="now">$100</span>
+            <span class="was">$890</span>
+            <span class="save">Save 89%</span>
+          </div>
+          <div class="promo-actions">
+            <button type="button" class="promo-btn primary" id="promo-pay" data-method="walled">Buy full library — $100</button>
+            <a class="promo-btn" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer" aria-label="Support for ALL EBooks Promo on Telegram">Ask a question</a>
+          </div>
+          <p class="promo-foot">Secure checkout by Walled</p>
+        </div>
       </div>
 
       <div class="catalog-header">
         <h2>Best Sellers</h2>
-        <span>17 titles • Updated 2026</span>
+        <span>17 titles · Updated 2026</span>
       </div>
       <div class="grid">
 
@@ -640,10 +366,9 @@
               <span class="format-badge">Ebook</span>
             </div>
             <button class="btn-pay paypal-button" data-method="walled">
-              <span>Pay Instantly</span>
+              <span>Buy now</span>
             </button>
-            <a class="btn-support" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer" aria-label="Support for Digital Product Launch Blueprint on Telegram">Support</a>
-            <div class="checkout-sub">Encrypted checkout · instant access after payment</div>
+            <a class="btn-support" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer" aria-label="Support for Digital Product Launch Blueprint on Telegram">Contact support</a>
           </div>
         </div>
 
@@ -666,10 +391,9 @@
               <span class="format-badge">PDF + EPUB</span>
             </div>
             <button class="btn-pay paypal-button" data-method="walled">
-              <span>Pay Instantly</span>
+              <span>Buy now</span>
             </button>
-            <a class="btn-support" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer" aria-label="Support for 30-Day Weight Loss Recipes on Telegram">Support</a>
-            <div class="checkout-sub">Encrypted checkout · instant access after payment</div>
+            <a class="btn-support" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer" aria-label="Support for 30-Day Weight Loss Recipes on Telegram">Contact support</a>
           </div>
         </div>
 
@@ -692,10 +416,9 @@
               <span class="format-badge">PDF + EPUB</span>
             </div>
             <button class="btn-pay paypal-button" data-method="walled">
-              <span>Pay Instantly</span>
+              <span>Buy now</span>
             </button>
-            <a class="btn-support" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer" aria-label="Support for Keto Fat Burn Cookbook on Telegram">Support</a>
-            <div class="checkout-sub">Encrypted checkout · instant access after payment</div>
+            <a class="btn-support" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer" aria-label="Support for Keto Fat Burn Cookbook on Telegram">Contact support</a>
           </div>
         </div>
 
@@ -709,7 +432,7 @@
             <div class="card-title">Male Enhancement Blueprint</div>
             <div class="card-author">by Michael Grant</div>
             <div class="stars">
-              <span class="s">★★★★</span>★
+              <span class="s">★★★★☆</span>
               <span class="count">(1,904)</span>
             </div>
             <div class="card-desc">Natural training methods, routines and recovery protocols focused on male confidence and performance.</div>
@@ -718,10 +441,9 @@
               <span class="format-badge">PDF + EPUB</span>
             </div>
             <button class="btn-pay paypal-button" data-method="walled">
-              <span>Pay Instantly</span>
+              <span>Buy now</span>
             </button>
-            <a class="btn-support" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer" aria-label="Support for Male Enhancement Blueprint on Telegram">Support</a>
-            <div class="checkout-sub">Encrypted checkout · instant access after payment</div>
+            <a class="btn-support" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer" aria-label="Support for Male Enhancement Blueprint on Telegram">Contact support</a>
           </div>
         </div>
 
@@ -744,10 +466,9 @@
               <span class="format-badge">PDF + EPUB</span>
             </div>
             <button class="btn-pay paypal-button" data-method="walled">
-              <span>Pay Instantly</span>
+              <span>Buy now</span>
             </button>
-            <a class="btn-support" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer" aria-label="Support for Penis Enlargement Protocol on Telegram">Support</a>
-            <div class="checkout-sub">Encrypted checkout · instant access after payment</div>
+            <a class="btn-support" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer" aria-label="Support for Penis Enlargement Protocol on Telegram">Contact support</a>
           </div>
         </div>
 
@@ -770,10 +491,9 @@
               <span class="format-badge">PDF + EPUB</span>
             </div>
             <button class="btn-pay paypal-button" data-method="walled">
-              <span>Pay Instantly</span>
+              <span>Buy now</span>
             </button>
-            <a class="btn-support" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer" aria-label="Support for Healthy Air Fryer Recipes on Telegram">Support</a>
-            <div class="checkout-sub">Encrypted checkout · instant access after payment</div>
+            <a class="btn-support" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer" aria-label="Support for Healthy Air Fryer Recipes on Telegram">Contact support</a>
           </div>
         </div>
 
@@ -796,10 +516,9 @@
               <span class="format-badge">PDF + EPUB</span>
             </div>
             <button class="btn-pay paypal-button" data-method="walled">
-              <span>Pay Instantly</span>
+              <span>Buy now</span>
             </button>
-            <a class="btn-support" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer" aria-label="Support for Family Comfort Food Recipes on Telegram">Support</a>
-            <div class="checkout-sub">Encrypted checkout · instant access after payment</div>
+            <a class="btn-support" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer" aria-label="Support for Family Comfort Food Recipes on Telegram">Contact support</a>
           </div>
         </div>
 
@@ -822,10 +541,9 @@
               <span class="format-badge">PDF + EPUB</span>
             </div>
             <button class="btn-pay paypal-button" data-method="walled">
-              <span>Pay Instantly</span>
+              <span>Buy now</span>
             </button>
-            <a class="btn-support" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer" aria-label="Support for Personal Development Mastery on Telegram">Support</a>
-            <div class="checkout-sub">Encrypted checkout · instant access after payment</div>
+            <a class="btn-support" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer" aria-label="Support for Personal Development Mastery on Telegram">Contact support</a>
           </div>
         </div>
 
@@ -848,10 +566,9 @@
               <span class="format-badge">PDF + EPUB</span>
             </div>
             <button class="btn-pay paypal-button" data-method="walled">
-              <span>Pay Instantly</span>
+              <span>Buy now</span>
             </button>
-            <a class="btn-support" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer" aria-label="Support for Financial Freedom Blueprint on Telegram">Support</a>
-            <div class="checkout-sub">Encrypted checkout · instant access after payment</div>
+            <a class="btn-support" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer" aria-label="Support for Financial Freedom Blueprint on Telegram">Contact support</a>
           </div>
         </div>
 
@@ -874,10 +591,9 @@
               <span class="format-badge">PDF + EPUB</span>
             </div>
             <button class="btn-pay paypal-button" data-method="walled">
-              <span>Pay Instantly</span>
+              <span>Buy now</span>
             </button>
-            <a class="btn-support" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer" aria-label="Support for Digital Marketing 2025 on Telegram">Support</a>
-            <div class="checkout-sub">Encrypted checkout · instant access after payment</div>
+            <a class="btn-support" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer" aria-label="Support for Digital Marketing 2025 on Telegram">Contact support</a>
           </div>
         </div>
 
@@ -900,10 +616,9 @@
               <span class="format-badge">PDF + EPUB</span>
             </div>
             <button class="btn-pay paypal-button" data-method="walled">
-              <span>Pay Instantly</span>
+              <span>Buy now</span>
             </button>
-            <a class="btn-support" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer" aria-label="Support for Complete Wellness Roadmap on Telegram">Support</a>
-            <div class="checkout-sub">Encrypted checkout · instant access after payment</div>
+            <a class="btn-support" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer" aria-label="Support for Complete Wellness Roadmap on Telegram">Contact support</a>
           </div>
         </div>
 
@@ -926,10 +641,9 @@
               <span class="format-badge">PDF + EPUB</span>
             </div>
             <button class="btn-pay paypal-button" data-method="walled">
-              <span>Pay Instantly</span>
+              <span>Buy now</span>
             </button>
-            <a class="btn-support" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer" aria-label="Support for Productivity Masterclass on Telegram">Support</a>
-            <div class="checkout-sub">Encrypted checkout · instant access after payment</div>
+            <a class="btn-support" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer" aria-label="Support for Productivity Masterclass on Telegram">Contact support</a>
           </div>
         </div>
 
@@ -952,10 +666,9 @@
               <span class="format-badge">PDF + EPUB</span>
             </div>
             <button class="btn-pay paypal-button" data-method="walled">
-              <span>Pay Instantly</span>
+              <span>Buy now</span>
             </button>
-            <a class="btn-support" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer" aria-label="Support for Mindfulness in 10 Minutes on Telegram">Support</a>
-            <div class="checkout-sub">Encrypted checkout · instant access after payment</div>
+            <a class="btn-support" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer" aria-label="Support for Mindfulness in 10 Minutes on Telegram">Contact support</a>
           </div>
         </div>
 
@@ -978,10 +691,9 @@
               <span class="format-badge">PDF + EPUB</span>
             </div>
             <button class="btn-pay paypal-button" data-method="walled">
-              <span>Pay Instantly</span>
+              <span>Buy now</span>
             </button>
-            <a class="btn-support" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer" aria-label="Support for Entrepreneurship Blueprint on Telegram">Support</a>
-            <div class="checkout-sub">Encrypted checkout · instant access after payment</div>
+            <a class="btn-support" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer" aria-label="Support for Entrepreneurship Blueprint on Telegram">Contact support</a>
           </div>
         </div>
 
@@ -1004,10 +716,9 @@
               <span class="format-badge">PDF + EPUB</span>
             </div>
             <button class="btn-pay paypal-button" data-method="walled">
-              <span>Pay Instantly</span>
+              <span>Buy now</span>
             </button>
-            <a class="btn-support" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer" aria-label="Support for AI & Automation Playbook on Telegram">Support</a>
-            <div class="checkout-sub">Encrypted checkout · instant access after payment</div>
+            <a class="btn-support" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer" aria-label="Support for AI & Automation Playbook on Telegram">Contact support</a>
           </div>
         </div>
 
@@ -1030,10 +741,9 @@
               <span class="format-badge">PDF + EPUB</span>
             </div>
             <button class="btn-pay paypal-button" data-method="walled">
-              <span>Pay Instantly</span>
+              <span>Buy now</span>
             </button>
-            <a class="btn-support" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer" aria-label="Support for Crypto & Web3 Starter Kit on Telegram">Support</a>
-            <div class="checkout-sub">Encrypted checkout · instant access after payment</div>
+            <a class="btn-support" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer" aria-label="Support for Crypto & Web3 Starter Kit on Telegram">Contact support</a>
           </div>
         </div>
 
@@ -1056,10 +766,9 @@
               <span class="format-badge">PDF + EPUB</span>
             </div>
             <button class="btn-pay paypal-button" data-method="walled">
-              <span>Pay Instantly</span>
+              <span>Buy now</span>
             </button>
-            <a class="btn-support" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer" aria-label="Support for High Ticket Sales Scripts on Telegram">Support</a>
-            <div class="checkout-sub">Encrypted checkout · instant access after payment</div>
+            <a class="btn-support" href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer" aria-label="Support for High Ticket Sales Scripts on Telegram">Contact support</a>
           </div>
         </div>
 
@@ -1070,41 +779,46 @@
     <section class="trust-section">
       <div class="trust-grid">
         <div class="trust-card">
-          <div class="trust-icon">⚡</div>
+          <div class="trust-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M13 3L5 14h6l-1 7 8-11h-6l1-7z"/></svg></div>
           <div class="trust-text">
             <h4>Instant Delivery</h4>
-            <p>Your download link is sent immediately after payment is confirmed.</p>
+            <p>Your access link is sent as soon as payment is confirmed.</p>
           </div>
         </div>
         <div class="trust-card">
-          <div class="trust-icon">🔒</div>
+          <div class="trust-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
           <div class="trust-text">
             <h4>Secure Payment</h4>
-            <p>Payments are processed securely through Walled. Access is unlocked after payment confirmation.</p>
+            <p>Payments are encrypted and processed by Walled. We never see your card details.</p>
           </div>
         </div>
         <div class="trust-card">
-          <div class="trust-icon">♻️</div>
+          <div class="trust-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.3-5.6M4 4v4h4"/></svg></div>
           <div class="trust-text">
             <h4>30-Day Guarantee</h4>
-            <p>Not satisfied? Contact us within 30 days for a full refund, no questions.</p>
+            <p>Not satisfied? Contact us within 30 days for a full refund.</p>
           </div>
         </div>
         <div class="trust-card">
-          <div class="trust-icon">💬</div>
+          <div class="trust-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></div>
           <div class="trust-text">
-            <h4>Live Support</h4>
-            <p>For help with ebook access or billing, <a href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer">message @{{TELEGRAM_USERNAME}} on Telegram</a>.</p>
+            <h4>Real Support</h4>
+            <p>Questions about access or billing? <a href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer">message @{{TELEGRAM_USERNAME}} on Telegram</a>.</p>
           </div>
         </div>
       </div>
     </section>
 
     <footer>
-      © 2025 {{SITE_NAME}} · Digital Products · All Rights Reserved<br>
-      <span style="font-size:0.72rem">Payments are encrypted and processed securely. Your content unlocks instantly after confirmation.</span>
-      <p class="legal-links"><a href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer">Telegram: @{{TELEGRAM_USERNAME}}</a></p>
-      <p class="legal-links"><a href="/terms-of-service.html">Terms of Service</a> · <a href="/privacy-policy.html">Privacy Policy</a> · <a href="/refund-policy.html">Refund Policy</a></p>
+      <div class="footer-inner">
+        <div class="footer-brand"><img src="/images/logo-mark.png" alt="" width="26" height="21" loading="lazy">© 2026 {{SITE_NAME}} · Digital products</div>
+        <div class="footer-links">
+          <a href="/terms-of-service.html">Terms</a>
+          <a href="/privacy-policy.html">Privacy</a>
+          <a href="/refund-policy.html">Refunds</a>
+          <a href="https://t.me/{{TELEGRAM_USERNAME}}" target="_blank" rel="noopener noreferrer">Telegram @{{TELEGRAM_USERNAME}}</a>
+        </div>
+      </div>
     </footer>
   </div>
 
