@@ -2582,7 +2582,7 @@ app.get('/api/health', (req, res) => {
     supabase_configured: Boolean(supabase),
     walled_configured: Boolean(
       process.env.WALLED_API_BASE_URL && process.env.WALLED_APP_ORIGIN &&
-      process.env.WALLED_API_KEY && (process.env.WALLED_PRODUCT_ID || process.env.WALLED_FIXED_PRODUCTS_JSON
+      process.env.WALLED_API_KEY && (process.env.WALLED_PRODUCT_ID
         || process.env.WALLED_VIDEO_FIXED_PRODUCTS_JSON || process.env.WALLED_VIDEO_BUNDLE_PRODUCT_ID)
     ),
     checkout_default: CHECKOUT_DEFAULT_METHOD,

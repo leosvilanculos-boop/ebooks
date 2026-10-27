@@ -112,7 +112,7 @@
     }
   ],
   "securePublication": "Pending: deploy Telegram support @sweet1books, Family Comfort Food Recipes at US$50, and ALL EBooks Promo at US$100.",
-  "videoBundle": "Uses the exact US$100 entry in WALLED_VIDEO_FIXED_PRODUCTS_JSON unless WALLED_VIDEO_BUNDLE_PRODUCT_ID is explicitly set. The configured gateway must match the delivered offer; the existing ALL EBooks Promo product describes 17 ebooks.",
+  "videoBundle": "Ebook and video checkout share WALLED_VIDEO_FIXED_PRODUCTS_JSON. The complete package uses the US$100 entry unless WALLED_VIDEO_BUNDLE_PRODUCT_ID is explicitly set.",
   "review": "Three gateways still require review. Selling rights, delivery evidence, content access, and substantiation of health and review/customer claims remain to be supplied by the seller.",
   "environmentFiles": [
     ".env.txt",
@@ -127,6 +127,6 @@
     "signedHostedConfirmationVerified": false,
     "activationRequiresWalledAndMerchantConfirmation": true
   },
-  "mainStoreGatewayConfiguration": "Separate matching gateways required; known ebook product UUIDs are rejected for video purchases.",
+  "mainStoreGatewayConfiguration": "Ebook and video checkout use the same WALLED_VIDEO_FIXED_PRODUCTS_JSON map.",
   "apiCompatibility": "CreateGatewayCheckoutIn forbids checkoutMode in request bodies; mode is read from the response. Previously schema-rejected HTTP 422 requests can retain their existing order and product IDs."
 }

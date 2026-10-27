@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import { resolveOrderDelivery } from './delivery.js';
-import { findCatalogPurchase, gatewayName, knownEbookGateway } from './checkout-catalog.js';
+import { findCatalogPurchase, gatewayName } from './checkout-catalog.js';
 import { checkoutOwner, ownsCheckout, renderCheckoutPage } from './checkout-page.js';
 import { walledErrorDetails } from './walled-errors.js';
 
@@ -14,18 +14,12 @@ function config() {
     try { const value = JSON.parse(process.env[name] || '{}'); return value && typeof value === 'object' && !Array.isArray(value) ? value : {}; }
     catch { return {}; }
   };
-  let fixedProducts = {};
-  try {
-    const raw = String(process.env.WALLED_FIXED_PRODUCTS_JSON || '').trim();
-    if (raw) fixedProducts = JSON.parse(raw);
-  } catch { fixedProducts = {}; }
   return {
     baseUrl: String(process.env.WALLED_API_BASE_URL || '').trim().replace(/\/+$/, ''),
     appOrigin: String(process.env.WALLED_APP_ORIGIN || '').trim().replace(/\/+$/, ''),
     apiKey: String(process.env.WALLED_API_KEY || '').trim(),
     productId: String(process.env.WALLED_PRODUCT_ID || '').trim(),
     videoBundleProductId: String(process.env.WALLED_VIDEO_BUNDLE_PRODUCT_ID || '').trim(),
-    videoProducts: jsonSetting('WALLED_VIDEO_FIXED_PRODUCTS_JSON'),
     checkoutNames: jsonSetting('WALLED_CHECKOUT_NAMES_JSON'),
     checkoutOrigin: String(process.env.WALLED_CHECKOUT_ORIGIN || 'https://trywalled.com').trim(),
     strictTest: String(process.env.WALLED_STRICT_TEST_MODE || '').toLowerCase() === 'true',
@@ -33,7 +27,7 @@ function config() {
     webhookSecret: String(process.env.WALLED_WEBHOOK_SECRET || '').trim(),
     variablePricing: String(process.env.WALLED_VARIABLE_PRICING || '').trim().toLowerCase() === 'true',
     fixedPriceUsd: Number(process.env.WALLED_FIXED_PRICE_USD),
-    fixedProducts,
+    fixedProducts: jsonSetting('WALLED_VIDEO_FIXED_PRODUCTS_JSON'),
     allowedPrices: String(process.env.WALLED_ALLOWED_PRICES_USD || '')
       .split(',').map((price) => Number(price.trim()))
       .filter((price) => Number.isFinite(price) && price > 0),
@@ -69,7 +63,7 @@ function isConfigured(c) {
     const origin = new URL(c.appOrigin);
     return base.protocol === 'https:' && origin.protocol === 'https:' && origin.origin === c.appOrigin
       && origin.pathname === '/' && !origin.search && !origin.hash
-      && Boolean(c.apiKey && (c.productId || c.videoBundleProductId || Object.keys(c.videoProducts || {}).length
+      && Boolean(c.apiKey && (c.productId || c.videoBundleProductId
         || (!c.variablePricing && Object.keys(c.fixedProducts || {}).length)));
   } catch { return false; }
 }
@@ -111,12 +105,9 @@ export function registerWalledRoutes(app, { getVideoForCheckout, getAllVideosFor
     let selectedProduct;
     if (isBundle) {
       amount = 100;
-      // The explicit main-store map includes the complete package at its exact price.
-      // The dedicated setting remains an optional override for older deployments.
       selectedProduct = c.videoBundleProductId ? { amount, productId: c.videoBundleProductId }
-        : fixedProductForPrice(c.videoProducts, amount);
+        : exactProductForPrice(c, amount);
       if (!selectedProduct) throw checkoutError(503, 'The complete package needs a Walled product configured for US$100. Contact support.');
-      if (knownEbookGateway(selectedProduct.productId)) throw checkoutError(503, 'This package needs a payment gateway that matches the content being purchased. Contact support.');
       const videos = await getAllVideosForBundle();
       if (!videos.length) throw checkoutError(404, 'No active videos are available.');
       title = 'All videos and folders';
@@ -129,11 +120,7 @@ export function registerWalledRoutes(app, { getVideoForCheckout, getAllVideosFor
         if (!video || !video.is_active || video.is_free) throw checkoutError(404, 'This item is not available for purchase.');
         amount = Number(video.price);
         title = String(video.title || 'Digital video').slice(0, 180);
-        const mainStoreProduct = fixedProductForPrice(c.videoProducts, amount);
-        selectedProduct = mainStoreProduct || exactProductForPrice(c, amount);
-        if (selectedProduct && knownEbookGateway(selectedProduct.productId)) {
-          throw checkoutError(503, 'This item needs a payment gateway that matches the content being purchased. Contact support.');
-        }
+        selectedProduct = exactProductForPrice(c, amount);
       } else {
         const item = findCatalogPurchase(input);
         if (!item) throw checkoutError(400, 'Choose a product from the store before checkout.');
@@ -169,7 +156,7 @@ export function registerWalledRoutes(app, { getVideoForCheckout, getAllVideosFor
       : res.status(status).json({ error });
     const c = config();
     if (!isConfigured(c)) return sendError(503, 'Walled checkout is not configured on the server.');
-    if (!c.variablePricing && !Object.keys(c.fixedProducts || {}).length && !Object.keys(c.videoProducts || {}).length
+    if (!c.variablePricing && !Object.keys(c.fixedProducts || {}).length
       && !c.videoBundleProductId && (!Number.isFinite(c.fixedPriceUsd) || c.fixedPriceUsd <= 0)) {
       return sendError(503, 'Configure at least one fixed Walled product price.');
     }

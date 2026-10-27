@@ -13,9 +13,9 @@ async function withCheckoutServer(options, run) {
     NODE_ENV: options.nodeEnv || 'test', WALLED_API_BASE_URL: 'https://api.walled.test/api/v1/integrations',
     WALLED_APP_ORIGIN: 'https://secure.test', WALLED_API_KEY: 'mock-test-key', WALLED_WEBHOOK_SECRET: 'mock-signing-secret',
     WALLED_VARIABLE_PRICING: 'false', WALLED_PRODUCT_ID: '', WALLED_FIXED_PRICE_USD: '',
-    WALLED_FIXED_PRODUCTS_JSON: JSON.stringify({ 35: 'ebook-35', 50: 'ebook-50', 90: 'ebook-90', 100: 'ebook-100' }),
-    WALLED_VIDEO_FIXED_PRODUCTS_JSON: JSON.stringify({ 90: 'video-90' }), WALLED_VIDEO_BUNDLE_PRODUCT_ID: '',
-    WALLED_CHECKOUT_NAMES_JSON: JSON.stringify({ 'ebook-90': 'Digital Product Launch Blueprint', 'video-90': 'Video catalog purchase' }),
+    WALLED_VIDEO_FIXED_PRODUCTS_JSON: JSON.stringify({ 35: 'ebook-35', 50: 'ebook-50', 90: 'ebook-90', 100: 'ebook-100' }),
+    WALLED_VIDEO_BUNDLE_PRODUCT_ID: '',
+    WALLED_CHECKOUT_NAMES_JSON: JSON.stringify({ 'ebook-90': 'Digital Product Launch Blueprint', 'ebook-100': 'ALL EBooks Promo' }),
     WALLED_CHECKOUT_ORIGIN: 'https://checkout.walled.test', WALLED_ENVIRONMENT: options.environment || 'test',
     WALLED_STRICT_TEST_MODE: options.strict ? 'true' : 'false',
     ...options.env,
@@ -340,27 +340,23 @@ test('unknown catalog products are rejected and the main-store title is resolved
     assert.equal((await h.review('product_name=Unknown&amount=90')).response.status, 400);
     const review = await h.review('video_id=registered-video&amount=1&display_title=Fake');
     assert.match(review.html, /Selected video/);
-    assert.match(review.html, /Video catalog purchase/);
+    assert.match(review.html, /Digital Product Launch Blueprint/);
     assert.doesNotMatch(review.html, /Fake/);
     assert.equal((await h.post(review)).status, 200);
-    assert.equal(h.calls.creates[0].payload.productId, 'video-90');
+    assert.equal(h.calls.creates[0].payload.productId, 'ebook-90');
   });
 });
 
-test('a video purchase cannot silently use a gateway registered for an ebook', async () => {
-  await withCheckoutServer({ env: { WALLED_VIDEO_FIXED_PRODUCTS_JSON: '{}', WALLED_FIXED_PRODUCTS_JSON: '{"90":"7fb048d1-3786-49aa-9cc3-b8944cb5418a"}' } }, async h => {
-    assert.equal((await h.review('video_id=registered-video')).response.status, 503);
-    assert.equal(h.calls.creates.length, 0);
-  });
-});
-
-test('a main-store-only price map creates a session without an ebook map or generic product ID', async () => {
-  const productId = 'video-90';
-  await withCheckoutServer({ env: { WALLED_VIDEO_FIXED_PRODUCTS_JSON: JSON.stringify({ 90: productId }), WALLED_FIXED_PRODUCTS_JSON: '{}' } }, async h => {
+test('the shared price map creates ebook and video sessions from the same product IDs', async () => {
+  const productId = 'shared-90';
+  await withCheckoutServer({ env: {
+    WALLED_VIDEO_FIXED_PRODUCTS_JSON: JSON.stringify({ 90: productId }),
+    WALLED_CHECKOUT_NAMES_JSON: JSON.stringify({ [productId]: 'Shared catalog purchase' }),
+  } }, async h => {
     const review = await h.review('video_id=registered-video');
     assert.equal(review.response.status, 200);
     assert.match(review.html, /Selected video/);
-    assert.match(review.html, /Video catalog purchase/);
+    assert.match(review.html, /Shared catalog purchase/);
     assert.equal((await h.post(review)).status, 200);
     assert.equal(h.calls.creates[0].payload.productId, productId);
     assert.equal(h.calls.creates[0].payload.metadata.title, 'Selected video');
@@ -369,9 +365,9 @@ test('a main-store-only price map creates a session without an ebook map or gene
   });
 });
 
-test('the complete package uses the exact US$100 main-store map entry without a separate bundle variable', async () => {
-  const productId = 'video-bundle-100';
-  await withCheckoutServer({ bundleVideos: [{ id: 'registered-video' }], env: { WALLED_VIDEO_FIXED_PRODUCTS_JSON: JSON.stringify({ 90: 'video-90', 100: productId }), WALLED_FIXED_PRODUCTS_JSON: '{}' } }, async h => {
+test('the complete package uses the exact US$100 map entry without a separate bundle variable', async () => {
+  const productId = 'shared-bundle-100';
+  await withCheckoutServer({ bundleVideos: [{ id: 'registered-video' }], env: { WALLED_VIDEO_FIXED_PRODUCTS_JSON: JSON.stringify({ 90: 'shared-90', 100: productId }) } }, async h => {
     const review = await h.review('bundle=true&amount=1&productId=untrusted');
     assert.equal(review.response.status, 200);
     assert.equal(review.data.autoStart, false);
@@ -386,32 +382,6 @@ test('the complete package uses the exact US$100 main-store map entry without a 
   });
 });
 
-test('an ID configured in the ebook map cannot also be used for videos', async () => {
-  await withCheckoutServer({ bundleVideos: [{ id: 'registered-video' }], env: { WALLED_VIDEO_FIXED_PRODUCTS_JSON: JSON.stringify({
-    90: 'ebook-90', 100: 'ebook-100',
-  }) } }, async h => {
-    for (const query of ['video_id=registered-video', 'bundle=true']) {
-      const review = await h.review(query);
-      assert.equal(review.response.status, 503);
-      assert.match(review.html, /payment gateway that matches the content/);
-    }
-    assert.equal(h.calls.creates.length, 0);
-  });
-});
-
-test('former ebook gateways renamed for videos work once they are no longer in the ebook map', async () => {
-  const video90 = '7fb048d1-3786-49aa-9cc3-b8944cb5418a';
-  const bundle100 = '63925aa1-3109-4481-8e4d-d42c03c96b80';
-  await withCheckoutServer({ bundleVideos: [{ id: 'registered-video' }], env: {
-    WALLED_VIDEO_FIXED_PRODUCTS_JSON: JSON.stringify({ 90: video90, 100: bundle100 }),
-    WALLED_FIXED_PRODUCTS_JSON: JSON.stringify({ 90: 'new-ebook-90', 100: 'new-ebook-100' }),
-  } }, async h => {
-    assert.equal((await h.post(await h.review('video_id=registered-video'))).status, 200);
-    assert.equal((await h.post(await h.review('bundle=true'))).status, 200);
-    assert.deepEqual(h.calls.creates.map(c => c.payload.productId), [video90, bundle100]);
-  });
-});
-
 test('an explicit bundle override retains priority over the US$100 map entry', async () => {
   await withCheckoutServer({ bundleVideos: [{ id: 'registered-video' }], env: { WALLED_VIDEO_BUNDLE_PRODUCT_ID: 'dedicated-bundle', WALLED_VIDEO_FIXED_PRODUCTS_JSON: '{"100":"mapped-bundle"}' } }, async h => {
     assert.equal((await h.post(await h.review('bundle=true'))).status, 200);
@@ -419,10 +389,12 @@ test('an explicit bundle override retains priority over the US$100 map entry', a
   });
 });
 
-test('the complete package never falls back to another price or to the ebook price map', async () => {
+test('the complete package uses the shared US$100 product when no bundle override is set', async () => {
   await withCheckoutServer({ bundleVideos: [{ id: 'registered-video' }] }, async h => {
-    assert.equal((await h.review('bundle=true')).response.status, 503);
-    assert.equal(h.calls.creates.length, 0);
+    const review = await h.review('bundle=true');
+    assert.equal(review.response.status, 200);
+    assert.equal((await h.post(review)).status, 200);
+    assert.equal(h.calls.creates[0].payload.productId, 'ebook-100');
   });
 });
 

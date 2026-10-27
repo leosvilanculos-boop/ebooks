@@ -25,7 +25,7 @@ services:
         sync: false
       - key: WALLED_VARIABLE_PRICING
         value: "false"
-      - key: WALLED_FIXED_PRODUCTS_JSON
+      - key: WALLED_VIDEO_FIXED_PRODUCTS_JSON
         sync: false
       - key: SUPABASE_URL
         sync: false

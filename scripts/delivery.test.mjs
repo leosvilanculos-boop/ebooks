@@ -12,9 +12,8 @@ async function withCheckout(options, run) {
     WALLED_APP_ORIGIN: 'https://secure.test', WALLED_API_KEY: 'test-key',
     WALLED_PRODUCT_ID: 'product-demo',
     WALLED_VIDEO_BUNDLE_PRODUCT_ID: '',
-    WALLED_VIDEO_FIXED_PRODUCTS_JSON: '{}',
+    WALLED_VIDEO_FIXED_PRODUCTS_JSON: '{"100":"product-ebook-promo"}',
     WALLED_VARIABLE_PRICING: 'false',
-    WALLED_FIXED_PRODUCTS_JSON: '{"100":"product-ebook-promo"}',
   };
   const originalEnv = Object.fromEntries(Object.keys(env).map(key => [key, process.env[key]]));
   Object.assign(process.env, env);
@@ -152,11 +151,11 @@ test('the complete ebook promotion uses ebook Telegram and never the main-store 
   });
 });
 
-test('video bundle checkout requires an explicit main-store product mapping', async () => {
+test('video bundle checkout uses the shared US$100 product and still needs active videos', async () => {
   await withCheckout({}, async (base, calls) => {
     const response = await fetch(base + '/api/walled-checkout?bundle=true&requestKey=7db78656-8fa2-44a2-9e5d-43efb727cb24');
-    assert.equal(response.status, 503);
-    assert.match(await response.text(), /complete package needs a Walled product configured for US\$100/);
+    assert.equal(response.status, 404);
+    assert.match(await response.text(), /No active videos are available/);
     assert.equal(calls.records, 0);
     assert.equal(calls.telegram, 0);
   });
