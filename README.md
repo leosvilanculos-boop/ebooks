@@ -28,7 +28,7 @@ The current deployment uses fixed pricing. `.env.example` contains placeholders;
 - `WALLED_ALLOWED_PRICES_USD`: comma-separated exact secure storefront catalog prices when using a variable-pricing product. The secure catalog will reject any amount not listed here.
 - `WALLED_WEBHOOK_SECRET`: signing secret for the Walled webhook.
 - `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`: server-only credentials for the same Supabase project as the main video store. The secure service reads video prices and records Walled orders, webhook events, and confirmed purchases.
-- `TELEGRAM_USERNAME`: ebook support username, defaulting to `sweet1books`. Shown in the storefront and used for ebook delivery after payment confirmation.
+- `TELEGRAM_USERNAME`: set to `zack_reinhart` in the hosting environment, replacing the previous support username if already configured. Defaults to `zack_reinhart`. Used in the storefront, each ebook card's Support button, and ebook delivery after payment confirmation.
 
 Do not put server keys in browser variables or commit them. Apply `../videos-site-main/sql/walled-checkout.sql` to the shared Supabase project before enabling Walled checkout.
 
@@ -51,7 +51,7 @@ On the main site, set `EBOOKS_SITE_URL` to the same secure HTTPS origin. Its pur
 
 ## Content delivery after payment
 
-After Walled confirms the stored order as paid, `/api/walled-status` reads the purchased video's `product_link` from the shared Supabase project. The confirmation screen displays that link with open and copy actions. Missing or invalid video links fall back to a Telegram button using `site_config.telegram_username`, the same setting managed in the main site's admin panel. Video bundle purchases also use that main-store contact. If it is empty, the confirmation screen asks the customer to contact the store; it never substitutes the ebook Telegram. Ebook catalog purchases, ALL EBooks Promo, and the complete ebook library use `TELEGRAM_USERNAME` (`sweet1books` by default), independently of the main-store contact. These choices use the stored purchase identity rather than browser-supplied links or usernames.
+After Walled confirms the stored order as paid, `/api/walled-status` reads the purchased video's `product_link` from the shared Supabase project. The confirmation screen displays that link with open and copy actions. Missing or invalid video links fall back to a Telegram button using `site_config.telegram_username`, the same setting managed in the main site's admin panel. Video bundle purchases also use that main-store contact. If it is empty, the confirmation screen asks the customer to contact the store; it never substitutes the ebook Telegram. Ebook catalog purchases, ALL EBooks Promo, and the complete ebook library use `TELEGRAM_USERNAME` (`zack_reinhart` by default), independently of the main-store contact. These choices use the stored purchase identity rather than browser-supplied links or usernames.
 
 Delivery data is not returned for pending, mismatched or revoked payments. Payment responses are private and not cached. Development payments exercise confirmation without inserting live purchase ledger records or returning real content links. Deploy all source modules and the checkout CSS/JavaScript assets together.
 
